@@ -1,0 +1,15 @@
+defaults:
+  - /models/base@_here_
+
+
+# Two-View Pipeline Model
+# ------------------
+_target_ : lightning_gluefactory.models.two_view_pipeline.TwoViewPipeline
+extractor:
+  trainable: false
+matcher:
+filter:
+solver:
+ground_truth:
+allow_no_extract: false
+run_gt_in_forward: false

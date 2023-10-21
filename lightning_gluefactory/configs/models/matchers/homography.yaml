@@ -1,0 +1,17 @@
+defaults:
+  - /models/base@_here_
+
+# Homography matcher
+# ------------------
+_target_: lightning_gluefactory.models.matchers.homography_matcher.HomographyMatcher
+
+# GT parameters for points
+use_points: true
+th_positive: 3.0
+th_negative: 3.0
+# GT parameters for lines
+use_lines: false
+n_line_sampled_pts: 50
+line_perp_dist_th: 5
+overlap_th: 0.2
+min_visibility_th: 0.5

@@ -1,0 +1,14 @@
+defaults:
+  - /models/base@_here_
+
+_target_: lightning_gluefactory.models.extractors.superpoint_open.SuperPoint
+descriptor_dim: 256
+nms_radius: 4
+max_num_keypoints:
+force_num_keypoints: false
+detection_threshold: 0.005
+remove_borders: 4
+channels: [ 64, 64, 128, 128, 256 ]
+dense_outputs: false
+
+checkpoint_url: https://github.com/rpautrat/SuperPoint/raw/master/weights/superpoint_v6_from_tf.pth

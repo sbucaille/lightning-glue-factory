@@ -87,7 +87,7 @@ class HomographyDataset(BaseDataset):
     def _init(self, conf):
         data_dir = DATA_PATH / conf.data_dir
         if not data_dir.exists():
-            if conf.data_dir == "revisitop1m":
+            if conf.data_dir == "/home/steven/ssd/revisitop1m":
                 logger.info("Downloading the revisitop1m dataset.")
                 self.download_revisitop1m()
             else:
@@ -109,9 +109,9 @@ class HomographyDataset(BaseDataset):
             if not image_list.exists():
                 raise FileNotFoundError(f"Cannot find image list {image_list}.")
             images = image_list.read_text().rstrip("\n").split("\n")
-            for image in images:
-                if not (image_dir / image).exists():
-                    raise FileNotFoundError(image_dir / image)
+            # for image in tqdm(images):
+            #     if not (image_dir / image).exists():
+            #         raise FileNotFoundError(image_dir / image)
             logger.info("Found %d images in list file.", len(images))
         elif isinstance(conf.image_list, omegaconf.listconfig.ListConfig):
             images = conf.image_list.to_container()

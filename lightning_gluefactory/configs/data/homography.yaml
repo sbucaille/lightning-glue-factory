@@ -1,0 +1,43 @@
+defaults:
+  - base
+#  - cache_loader@load_features TODO implement cache_loader
+
+# Homography dataset
+# ------------------
+_target_: lightning_gluefactory.datasets.homographies.HomographyDataModule
+
+# image search
+data_dir: /home/steven/ssd/revisitop1m  # revisitop1m
+image_dir: ${.data_dir}/jpg
+image_list: ${.data_dir}/revisitop1m.txt
+glob: ["*.jpg", "*.png", "*.jpeg", "*.JPG", "*.PNG"]
+
+# splits
+train_size: 100
+val_size: 10
+shuffle_seed: 0 # or None to skip
+
+# image loading
+grayscale: false
+triplet: false
+right_only: false
+reseed: false
+homography:
+  difficulty: 0.8
+  translation: 1.0
+  max_angle: 60
+  n_angles: 10
+  patch_shape: [640, 480]
+  min_convexity: 0.05
+photometric:
+  name: dark
+  p: 0.75
+#  difficulty: 1.0,  # currently unused
+
+# feature loading
+load_features:
+  do: false
+  collate: false
+  thresh: 0.0
+  max_num_keypoints: -1
+  force_num_keypoints: false

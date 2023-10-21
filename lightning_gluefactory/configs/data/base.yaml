@@ -1,0 +1,9 @@
+num_workers : ${data.batch_size}
+train_batch_size : ${data.batch_size}
+val_batch_size : ${data.batch_size}
+test_batch_size : ${data.batch_size}
+shuffle_training : true
+batch_size : 1
+num_threads : 1
+seed : 0
+prefetch_factor : 2

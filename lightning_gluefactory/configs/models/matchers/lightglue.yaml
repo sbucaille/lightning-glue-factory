@@ -1,0 +1,26 @@
+defaults:
+  - /models/base@_here_
+
+# LightGlue Matcher
+# -----------------
+_target_: lightning_gluefactory.models.matchers.lightglue.LightGlue
+
+input_dim: 256  # input descriptor dimension (autoselected from weights)
+add_scale_ori: false
+descriptor_dim: 256
+n_layers: 9
+num_heads: 4
+flash: false  # enable FlashAttention if available.
+mp: false  # enable mixed precision
+depth_confidence: -1  # early stopping, disable with -1
+width_confidence: -1  # point pruning, disable with -1
+filter_threshold: 0.0  # match threshold
+checkpointed: false
+weights:  # either a path or the name of pretrained weights (disk, ...)
+weights_from_version: "v0.1_arxiv"
+loss:
+  gamma: 1.0
+  fn: "nll"
+  nll_balancing: 0.5
+
+url: https://github.com/cvg/LightGlue/releases/download/${.weights_from_version}/${.weights_from_version}_lightglue.pth

@@ -1,0 +1,11 @@
+
+path: ???  # can be a format string like exports/{scene}/
+data_keys:  # load all keys
+device:   # load to same device as data
+trainable: false
+add_data_path: true
+collate: true
+scale: ["keypoints", "lines", "orig_lines"]
+padding_fn:
+padding_length:  # required for batching!
+numeric_type: "float32"  # [None, "float16", "float32", "float64"]
