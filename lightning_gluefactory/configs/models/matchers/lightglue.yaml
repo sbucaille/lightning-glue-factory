@@ -18,7 +18,7 @@ filter_threshold: 0.0  # match threshold
 checkpointed: false
 weights:  # either a path or the name of pretrained weights (disk, ...)
 weights_from_version: "v0.1_arxiv"
-loss:
+loss_parameters:
   gamma: 1.0
   fn: "nll"
   nll_balancing: 0.5

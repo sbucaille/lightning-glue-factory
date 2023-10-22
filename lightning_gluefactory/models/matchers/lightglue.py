@@ -322,7 +322,7 @@ class LightGlue(BaseModel):
             checkpointed: bool,
             weights: str,
             weights_from_version: str,
-            loss: DictConfig,
+            loss_parameters: DictConfig,
             url: str,
             **kwargs,
     ):
@@ -339,7 +339,7 @@ class LightGlue(BaseModel):
         self.checkpointed = checkpointed
         self.weights = weights
         self.weights_from_version = weights_from_version
-        self.loss = loss
+        self.loss_parameters = loss_parameters
         self.url = url
         super().__init__(**kwargs)
 
@@ -367,7 +367,7 @@ class LightGlue(BaseModel):
             [TokenConfidence(d) for _ in range(n - 1)]
         )
 
-        self.loss_fn = NLLLoss(self.loss)
+        self.loss_fn = NLLLoss(self.loss_parameters)
 
         state_dict = None
         if self.weights is not None:
@@ -593,8 +593,8 @@ class LightGlue(BaseModel):
             params_i = loss_params(pred, i)
             nll, _, _ = self.loss_fn(params_i, data, weights=gt_weights)
 
-            if self.loss.gamma > 0.0:
-                weight = self.loss.gamma ** (N - i - 1)
+            if self.loss_parameters.gamma > 0.0:
+                weight = self.loss_parameters.gamma ** (N - i - 1)
             else:
                 weight = i + 1
             sum_weights += weight

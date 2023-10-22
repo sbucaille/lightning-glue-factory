@@ -88,15 +88,16 @@ class TwoViewPipeline(BaseModel):
             pred.update({f"gt_{k}": v for k, v in gt_pred.items()})
 
         for k in self.components:
-            apply = True
-            if "apply_loss" in self.__getattribute__(k).keys():
-                apply = self.conf[k].apply_loss
-            if self.__getattribute__(k) and apply:
-                try:
-                    losses_, metrics_ = getattr(self, k).loss(pred, {**pred, **data})
-                except NotImplementedError:
-                    continue
-                losses = {**losses, **losses_}
-                metrics = {**metrics, **metrics_}
-                total = losses_["total"] + total
+            component = getattr(self, k, None)
+            if component is not None:
+                apply = getattr(component, "apply_loss", True)
+                if apply:
+                    try:
+                        losses_, metrics_ = component.loss(pred, {**pred, **data})
+                    except NotImplementedError:
+                        continue
+                    losses = {**losses, **losses_}
+                    metrics = {**metrics, **metrics_}
+                    total = losses_["total"] + total
+
         return {**losses, "total": total}, metrics

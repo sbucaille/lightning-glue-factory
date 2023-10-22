@@ -2,8 +2,9 @@ train:
   seed: "???"
   epochs: 1
   opt_regexp:  # regular expression to filter parameters to optimize
-  optimize_options: { } # options for the optimizer
-  optimizer: adam # optional arguments passed to the optimizer
+  optimizer_options: { } # options for the optimizer
+  optimizer: # optional arguments passed to the optimizer
+    _target_: torch.optim.Adam
   lr: 0.001 # learning rate
   lr_schedule:
     type:
@@ -12,7 +13,10 @@ train:
     on_epoch: false
     factor: 1.0
   lr_scaling:
-    - (100, [ "dampingnet.const" ])
+   -
+    - 100
+    - "dampingnet.const"
+
   eval_every_iter: 1000  # interval for evaluation on the validation set
   save_every_iter: 5000  # interval for saving the current checkpoint
   log_every_iter: 200  # interval for logging the loss to the console

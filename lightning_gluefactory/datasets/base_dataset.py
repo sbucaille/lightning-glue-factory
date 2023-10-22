@@ -112,6 +112,7 @@ class BaseDataModule(L.LightningDataModule):
             seed: int,
             prefetch_factor: int,
     ):
+        super().__init__()
         """Perform some logic and call the _init method of the child model."""
         self.num_workers = num_workers
         self.train_batch_size = train_batch_size

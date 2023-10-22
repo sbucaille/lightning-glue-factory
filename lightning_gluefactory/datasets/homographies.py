@@ -83,6 +83,8 @@ class HomographyDataModule(BaseDataModule):
         self.photometric = photometric
         self.load_features = load_features
 
+        self.prepare_data_per_node = False
+
         logger.info(f"Creating dataset {self.__class__.__name__}")
 
     def prepare_data(self):

@@ -174,7 +174,7 @@ class SuperPoint(BaseModel):
             else:
                 k = keypoints_all
                 s = scores_all
-            if self.conf.max_num_keypoints is not None:
+            if self.max_num_keypoints is not None:
                 k, s = select_top_k_keypoints(k, s, self.max_num_keypoints)
 
             keypoints.append(k)

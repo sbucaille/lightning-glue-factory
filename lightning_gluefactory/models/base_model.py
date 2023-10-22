@@ -94,7 +94,7 @@ class BaseModel(nn.Module, metaclass=MetaModel):
             if isinstance(module, nn.modules.batchnorm._BatchNorm):
                 module.eval()
 
-        if self.conf.freeze_batch_normalization:
+        if self.freeze_batch_normalization:
             self.apply(freeze_bn)
 
         return self
