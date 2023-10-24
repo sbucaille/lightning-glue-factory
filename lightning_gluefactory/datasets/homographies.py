@@ -167,6 +167,26 @@ class HomographyDataModule(BaseDataModule):
             raise ValueError(self.image_list)
         return images
 
+    def download_revisitop1m(self):
+        data_dir = DATA_PATH / self.data_dir
+        tmp_dir = data_dir.parent / "revisitop1m_tmp"
+        if tmp_dir.exists():  # The previous download failed.
+            shutil.rmtree(tmp_dir)
+        image_dir = tmp_dir / self.image_dir
+        image_dir.mkdir(exist_ok=True, parents=True)
+        num_files = 100
+        url_base = "http://ptak.felk.cvut.cz/revisitop/revisitop1m/"
+        list_name = "revisitop1m.txt"
+        torch.hub.download_url_to_file(url_base + list_name, tmp_dir / list_name)
+        for n in tqdm(range(num_files), position=1):
+            tar_name = "revisitop1m.{}.tar.gz".format(n + 1)
+            tar_path = image_dir / tar_name
+            torch.hub.download_url_to_file(url_base + "jpg/" + tar_name, tar_path)
+            with tarfile.open(tar_path) as tar:
+                tar.extractall(path=image_dir)
+            tar_path.unlink()
+        shutil.move(tmp_dir, data_dir)
+
 
 class HomographyDataset(torch.utils.data.Dataset):
     def __init__(
@@ -395,25 +415,25 @@ class HomographyDataset(torch.utils.data.Dataset):
 #         val_images = images[self.train_size: self.train_size + self.val_size]
 #         self.images = {"train": train_images, "val": val_images}
 #
-#     def download_revisitop1m(self):
-#         data_dir = DATA_PATH / self.data_dir
-#         tmp_dir = data_dir.parent / "revisitop1m_tmp"
-#         if tmp_dir.exists():  # The previous download failed.
-#             shutil.rmtree(tmp_dir)
-#         image_dir = tmp_dir / self.image_dir
-#         image_dir.mkdir(exist_ok=True, parents=True)
-#         num_files = 100
-#         url_base = "http://ptak.felk.cvut.cz/revisitop/revisitop1m/"
-#         list_name = "revisitop1m.txt"
-#         torch.hub.download_url_to_file(url_base + list_name, tmp_dir / list_name)
-#         for n in tqdm(range(num_files), position=1):
-#             tar_name = "revisitop1m.{}.tar.gz".format(n + 1)
-#             tar_path = image_dir / tar_name
-#             torch.hub.download_url_to_file(url_base + "jpg/" + tar_name, tar_path)
-#             with tarfile.open(tar_path) as tar:
-#                 tar.extractall(path=image_dir)
-#             tar_path.unlink()
-#         shutil.move(tmp_dir, data_dir)
+    # def download_revisitop1m(self):
+    #     data_dir = DATA_PATH / self.data_dir
+    #     tmp_dir = data_dir.parent / "revisitop1m_tmp"
+    #     if tmp_dir.exists():  # The previous download failed.
+    #         shutil.rmtree(tmp_dir)
+    #     image_dir = tmp_dir / self.image_dir
+    #     image_dir.mkdir(exist_ok=True, parents=True)
+    #     num_files = 100
+    #     url_base = "http://ptak.felk.cvut.cz/revisitop/revisitop1m/"
+    #     list_name = "revisitop1m.txt"
+    #     torch.hub.download_url_to_file(url_base + list_name, tmp_dir / list_name)
+    #     for n in tqdm(range(num_files), position=1):
+    #         tar_name = "revisitop1m.{}.tar.gz".format(n + 1)
+    #         tar_path = image_dir / tar_name
+    #         torch.hub.download_url_to_file(url_base + "jpg/" + tar_name, tar_path)
+    #         with tarfile.open(tar_path) as tar:
+    #             tar.extractall(path=image_dir)
+    #         tar_path.unlink()
+    #     shutil.move(tmp_dir, data_dir)
 #
 #     def get_dataset(self, split):
 #         return HomographyDataset(
