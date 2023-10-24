@@ -132,7 +132,7 @@ class HomographyDataModule(BaseDataModule):
     def get_images(self):
         data_dir = DATA_PATH / self.data_dir
         if not data_dir.exists():
-            if self.data_dir == "/home/steven/ssd/revisitop1m":
+            if self.data_dir == "revisitop1m":
                 logger.info("Downloading the revisitop1m dataset.")
                 self.download_revisitop1m()
             else:
