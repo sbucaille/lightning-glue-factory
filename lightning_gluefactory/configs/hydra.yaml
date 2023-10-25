@@ -2,7 +2,9 @@ experiment_name: ???
 data_path: data/
 training_path: training/
 eval_path: results/
+mixed_precision : false
 
 hydra:
   run:
     dir: outputs/${experiment_name}
+

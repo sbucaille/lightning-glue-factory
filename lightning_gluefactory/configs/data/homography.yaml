@@ -7,7 +7,7 @@ defaults:
 _target_: lightning_gluefactory.datasets.homographies.HomographyDataModule
 
 # image search
-data_dir: /home/steven/ssd/revisitop1m  # revisitop1m
+data_dir: ${data_path}/revisitop1m
 image_dir: ${.data_dir}/jpg
 image_list: ${.data_dir}/revisitop1m.txt
 glob: ["*.jpg", "*.png", "*.jpeg", "*.JPG", "*.PNG"]
