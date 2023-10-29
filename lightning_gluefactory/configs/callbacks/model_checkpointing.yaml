@@ -1,0 +1,10 @@
+model_checkpointing:
+  _target_: lightning.pytorch.callbacks.ModelCheckpoint
+  dirpath: ${training_path}/checkpoints
+  filename: "{epoch:03d}-{${.monitor}':.4f}"
+  monitor: ???
+  save_last: true
+  save_top_k: 10
+  mode: ???
+  every_n_train_steps: 5000
+  save_on_train_epoch_end: true

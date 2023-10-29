@@ -1,3 +1,8 @@
+defaults:
+#  - loggers/AimLogger@logger
+  - callbacks:
+      - model_checkpointing
+
 train:
   seed: "???"
   epochs: 1
@@ -35,4 +40,8 @@ train:
   plot:
   submodules: [ ]
 
+callbacks:
+  model_checkpointing:
+    monitor: "loss/total"  # key to use to select the best checkpoint
+    mode: "min"  # min/max
 overfit: false

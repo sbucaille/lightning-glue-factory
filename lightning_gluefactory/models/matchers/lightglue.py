@@ -621,5 +621,7 @@ class LightGlue(BaseModel):
             metrics = {}
         return losses, metrics
 
+    def metrics_list(self):
+        return ["match_recall", "match_precision", "accuracy", "average_precision"]
 
 __main_model__ = LightGlue
