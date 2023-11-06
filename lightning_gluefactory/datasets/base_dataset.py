@@ -156,6 +156,7 @@ class BaseDataModule(L.LightningDataModule):
             num_workers=self.num_workers,
             sampler=sampler,
             # worker_init_fn=worker_init_fn,
+            persistent_workers=True,
             collate_fn=collate,
         )
 
