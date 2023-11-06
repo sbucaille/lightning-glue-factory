@@ -63,9 +63,9 @@ def collate(batch):
                 storage = elem.storage()._new_shared(numel)  # noqa: F841
         return torch.stack(batch, dim=0)
     elif (
-            elem_type.__module__ == "numpy"
-            and elem_type.__name__ != "str_"
-            and elem_type.__name__ != "string_"
+        elem_type.__module__ == "numpy"
+        and elem_type.__name__ != "str_"
+        and elem_type.__name__ != "string_"
     ):
         if elem_type.__name__ == "ndarray" or elem_type.__name__ == "memmap":
             # array of string classes and object
@@ -101,16 +101,16 @@ def collate(batch):
 
 class BaseDataModule(L.LightningDataModule):
     def __init__(
-            self,
-            num_workers: int,
-            train_batch_size: int,
-            val_batch_size: int,
-            test_batch_size: int,
-            shuffle_training: bool,
-            batch_size: int,
-            num_threads: int,
-            seed: int,
-            prefetch_factor: int,
+        self,
+        num_workers: int,
+        train_batch_size: int,
+        val_batch_size: int,
+        test_batch_size: int,
+        shuffle_training: bool,
+        batch_size: int,
+        num_threads: int,
+        seed: int,
+        prefetch_factor: int,
     ):
         super().__init__()
         """Perform some logic and call the _init method of the child model."""
@@ -193,16 +193,16 @@ class BaseDataset(metaclass=ABCMeta):
     default_conf = {}
 
     def __init__(
-            self,
-            num_workers: int,
-            train_batch_size: int,
-            val_batch_size: int,
-            test_batch_size: int,
-            shuffle_training: bool,
-            batch_size: int,
-            num_threads: int,
-            seed: int,
-            prefetch_factor: int,
+        self,
+        num_workers: int,
+        train_batch_size: int,
+        val_batch_size: int,
+        test_batch_size: int,
+        shuffle_training: bool,
+        batch_size: int,
+        num_threads: int,
+        seed: int,
+        prefetch_factor: int,
     ):
         """Perform some logic and call the _init method of the child model."""
         self.num_workers = num_workers

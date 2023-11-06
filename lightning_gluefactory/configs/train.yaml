@@ -1,5 +1,5 @@
 defaults:
-#  - loggers/AimLogger@logger
+  - loggers/aimstack@logger
   - callbacks:
       - model_checkpointing
 
@@ -39,9 +39,11 @@ train:
   pr_curves: { }
   plot:
   submodules: [ ]
-
+  strategy: auto
+  train_metric_prefix: train/
+  val_metric_prefix: val/
 callbacks:
   model_checkpointing:
-    monitor: "loss/total"  # key to use to select the best checkpoint
+    monitor: "val/loss/total"  # key to use to select the best checkpoint
     mode: "min"  # min/max
 overfit: false
