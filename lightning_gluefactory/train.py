@@ -7,7 +7,9 @@ import aim
 import hydra
 import numpy as np
 import torch
+from aim import Figure, Image
 from lightning.pytorch.loggers import TensorBoardLogger
+from aim.pytorch_lightning import AimLogger
 from omegaconf import OmegaConf, DictConfig
 from torchmetrics import MeanMetric
 
@@ -35,9 +37,9 @@ class GlueFactory(L.LightningModule):
             self.model = torch.compile(self.model, mode=self.config.compile)
 
         self.validation_plot = False
-        if self.config.get("plot", False):
+        if self.config.train.get("plot", False):
             self.validation_plot = True
-            self.val_number_of_plots, self.val_plot_function = self.config.plot
+            self.val_number_of_plots, self.val_plot_function = self.config.train.plot
         self.mean_metric = MeanMetric(nan_strategy="ignore")
 
     def forward(self, x):
@@ -46,13 +48,16 @@ class GlueFactory(L.LightningModule):
     def on_train_epoch_start(self) -> None:
         L.seed_everything(self.config.train.seed + self.current_epoch)
 
-
     def training_step(self, batch, batch_idx):
         data = batch
         pred = self.model(data)
         losses, _ = self.loss_fn(pred, data)
         loss = torch.mean(losses["total"])
-        self.log(self.config.train.train_metric_prefix + "loss/total", loss, rank_zero_only=True)
+        self.log(
+            self.config.train.train_metric_prefix + "loss/total",
+            loss,
+            rank_zero_only=True,
+        )
         if torch.isnan(loss).any():
             logger.log(f"Detected NAN, skipping iteration {batch_idx}")
             del pred, data, loss, losses
@@ -65,8 +70,8 @@ class GlueFactory(L.LightningModule):
         if self.validation_plot:
             self.val_figures = []
             self.val_batch_ids_to_plot = np.random.choice(
-                len(self.val_dataloader()),
-                min(len(self.val_dataloader()), self.val_number_of_plots),
+                self.config.data.val_size,
+                min(self.config.data.val_size, self.val_number_of_plots),
                 replace=False,
             )
 
@@ -75,13 +80,21 @@ class GlueFactory(L.LightningModule):
         pred = self.model(data)
         losses, metrics = self.loss_fn(pred, data)
         if self.validation_plot and batch_idx in self.val_batch_ids_to_plot:
-            self.val_figures.append(self.val_plot_function(pred, data))
+            validation_figure = hydra.utils.call(self.val_plot_function, pred, data)
+            for k, v in validation_figure.items():
+                self.logger.experiment.track(Image(v), name=k, step=batch_idx)
             # TODO pr_curves implementation
-        numbers = {**metrics, **{self.config.train.val_metric_prefix + "loss/" + k: v for k, v in losses.items()}}
+        numbers = {
+            **metrics,
+            **{
+                self.config.train.val_metric_prefix + "loss/" + k: v
+                for k, v in losses.items()
+            },
+        }
 
         for k, v in numbers.items():
             if k not in self.val_results:
-                self.val_results[k] = MeanMetric(nan_strategy='ignore').to(v)
+                self.val_results[k] = MeanMetric(nan_strategy="ignore").to(v)
             self.val_results[k].update(v)
         # TODO implement median and recall metrics
         # if k in self.config.median_metrics:
@@ -178,11 +191,12 @@ def training(config: OmegaConf):
 
     glue_factory = GlueFactory(config)
 
-    logger = (
-        hydra.utils.instantiate(config.logger, run_hash=run.get("hash"))
+    logger: AimLogger = (
+        hydra.utils.instantiate(config.logger)
         if getattr(config, "logger", None) is not None
         else None
     )
+    logger.log_hyperparams(config)
     callbacks = [hydra.utils.instantiate(c) for c in config.callbacks.values()]
 
     print(os.getcwd())
