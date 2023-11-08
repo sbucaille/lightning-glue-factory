@@ -4,10 +4,23 @@ Base class for trainable models.
 
 from abc import ABCMeta, abstractmethod
 from copy import copy
+from dataclasses import dataclass
 
 import omegaconf
 from omegaconf import OmegaConf
+from pydantic import BaseModel as PydanticBaseModel
 from torch import nn
+from hydra.core.config_store import ConfigStore
+
+
+@dataclass
+class BaseModelConfig(PydanticBaseModel):
+    """
+    Base class for model configuration.
+    """
+    trainable: bool = True
+    freeze_batch_normalization: bool = False
+    timeit: bool = False
 
 
 class MetaModel(ABCMeta):

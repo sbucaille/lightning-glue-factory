@@ -6,14 +6,33 @@
    available under the MIT license.
 """
 from collections import OrderedDict
+from dataclasses import dataclass, field
 from types import SimpleNamespace
-from typing import List
+from typing import List, Optional
 
 import torch
 import torch.nn as nn
+from hydra.core.config_store import ConfigStore
+from omegaconf import MISSING
 
-from lightning_gluefactory.models.base_model import BaseModel
+from lightning_gluefactory.models.base_model import BaseModel, BaseModelConfig
 from gluefactory.models.utils.misc import pad_and_stack
+
+
+class SuperPointOpenConfig(BaseModelConfig):
+    """
+    Configuration for the SuperPoint model.
+    """
+    _target_: str = "lightning_gluefactory.models.extractors.superpoint_open.SuperPoint"
+    descriptor_dim: int = 256
+    nms_radius: int = 4
+    max_num_keypoints: Optional[int] = None
+    force_num_keypoints: bool = False
+    detection_threshold: float = 0.015
+    remove_borders: int = 4
+    channels: List[int] = field(default_factory=lambda: [64, 64, 128, 128, 256, 256, 512, 512])
+    dense_outputs: bool = False
+    checkpoint_url: str = "https://github.com/rpautrat/SuperPoint/raw/master/weights/superpoint_v6_from_tf.pth"
 
 
 def sample_descriptors(keypoints, descriptors, s: int = 8):

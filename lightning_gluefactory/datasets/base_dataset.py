@@ -6,20 +6,39 @@ See mnist.py for an example of dataset.
 import collections
 import logging
 from abc import ABCMeta, abstractmethod
+from dataclasses import dataclass
 
 import lightning as L
 import omegaconf
 import torch
+from hydra.core.config_store import ConfigStore
 from lightning.pytorch.utilities.types import TRAIN_DATALOADERS, EVAL_DATALOADERS
-from omegaconf import OmegaConf
+from omegaconf import OmegaConf, MISSING
 from torch.utils.data import DataLoader, Sampler, get_worker_info
 from torch.utils.data._utils.collate import (
     default_collate_err_msg_format,
     np_str_obj_array_pattern,
 )
+from pydantic import BaseModel as PydanticBaseModel
 
 from gluefactory.utils.tensor import string_classes
 from gluefactory.utils.tools import set_num_threads, set_seed
+
+
+class BaseDatasetConfig(PydanticBaseModel):
+    """
+    Base class for dataset configuration.
+    """
+    num_workers: int = MISSING
+    train_batch_size: int = MISSING
+    val_batch_size: int = MISSING
+    test_batch_size: int = MISSING
+    shuffle_training: bool = True
+    batch_size: int = 1
+    num_threads: int = 1
+    seed: int = 0
+    prefetch_factor: int = 2
+
 
 logger = logging.getLogger(__name__)
 

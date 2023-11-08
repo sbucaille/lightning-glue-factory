@@ -1,18 +1,51 @@
 import warnings
+from dataclasses import field, dataclass
 from pathlib import Path
 from typing import Callable, List, Optional
 
 import numpy as np
 import torch
 import torch.nn.functional as F
+from hydra.core.config_store import ConfigStore
 from omegaconf import OmegaConf, DictConfig
 from torch import nn
 from torch.utils.checkpoint import checkpoint
+from pydantic import BaseModel as PydanticBaseModel
 
 from gluefactory.settings import DATA_PATH
 from gluefactory.models.utils.losses import NLLLoss
 from gluefactory.models.utils.metrics import matcher_metrics
-from lightning_gluefactory.models.base_model import BaseModel
+from lightning_gluefactory.models.base_model import BaseModel, BaseModelConfig
+
+
+class LossParameters(PydanticBaseModel):
+    gamma: float = 1.0
+    fn: str = "nll"
+    nll_balancing: float = 0.5
+
+
+class LightGlueConfig(BaseModelConfig):
+    """
+    Configuration for the LightGlue model.
+    """
+    _target_ = "lightning_gluefactory.models.matchers.lightglue.LightGlue"
+    input_dim: int = 256
+    add_scale_ori: bool = False
+    descriptor_dim: int = 256
+    n_layers: int = 9
+    num_heads: int = 4
+    flash: bool = True
+    mp: bool = False
+    depth_confidence: int = -1
+    width_confidence: int = -1
+    filter_threshold: float = 0.0
+    checkpointed: bool = False
+    weights: Optional[str] = None
+    weights_from_version: str = "v0.1_arxiv"
+    loss_parameters: LossParameters = LossParameters()
+    url: str = "https://github.com/cvg/LightGlue/releases/download/${.weights_from_version}/${.weights_from_version}_lightglue.pth"
+
+
 
 FLASH_AVAILABLE = hasattr(F, "scaled_dot_product_attention")
 

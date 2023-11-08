@@ -9,8 +9,27 @@ Default: SuperPoint with nearest neighbor matching.
 Convention for the matches: m0[i] is the index of the keypoint in image 1
 that corresponds to the keypoint i in image 0. m0[i] = -1 if i is unmatched.
 """
+from dataclasses import field
+from typing import Optional
 
-from lightning_gluefactory.models.base_model import BaseModel
+from hydra.core.config_store import ConfigStore
+
+from lightning_gluefactory.models.base_model import BaseModel, BaseModelConfig
+
+
+class TwoViewPipelineConfig(BaseModelConfig):
+    """
+    Configuration for the TwoViewPipeline model.
+    """
+    _target_ = "lightning_gluefactory.models.two_view_pipeline.TwoViewPipeline"
+    allow_no_extract: bool = False
+    run_gt_in_forward: bool = False
+    extractor: Optional[BaseModelConfig] = field(default=BaseModelConfig(trainable=False))
+    matcher: Optional[BaseModelConfig] = None
+    filter: Optional[BaseModelConfig] = None
+    solver: Optional[BaseModelConfig] = None
+    ground_truth: Optional[BaseModelConfig] = None
+
 
 
 class TwoViewPipeline(BaseModel):

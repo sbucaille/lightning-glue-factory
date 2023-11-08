@@ -1,8 +1,30 @@
+from dataclasses import dataclass
+
+from hydra.core.config_store import ConfigStore
+
 from gluefactory.geometry.gt_generation import (
     gt_line_matches_from_homography,
     gt_matches_from_homography,
 )
-from lightning_gluefactory.models.base_model import BaseModel
+from lightning_gluefactory.models.base_model import BaseModel, BaseModelConfig
+
+
+class HomographyMatcherConfig(BaseModelConfig):
+    """
+    Configuration for the HomographyMatcher model.
+    """
+    _target_ = "lightning_gluefactory.models.matchers.homography_matcher.HomographyMatcher"
+    # GT parameters for points
+    use_points: bool = True
+    th_positive: float = 3.0
+    th_negative: float = 1.0
+    # GT parameters for lines
+    use_lines: bool = True
+    n_line_sampled_pts: int = 2
+    line_perp_dist_th: int = 10
+    overlap_th: float = 0.5
+    min_visibility_th: float = 0.5
+
 
 
 class HomographyMatcher(BaseModel):

@@ -1,33 +1,101 @@
 import argparse
 import os
 from collections import defaultdict
+from dataclasses import dataclass, field
 from pathlib import Path
+from typing import List, Optional, Any, Tuple
 
 import aim
 import hydra
 import numpy as np
 import torch
 from aim import Figure, Image
+from hydra.core.config_store import ConfigStore
 from lightning.pytorch.loggers import TensorBoardLogger
 from aim.pytorch_lightning import AimLogger
-from omegaconf import OmegaConf, DictConfig
+from omegaconf import OmegaConf, DictConfig, MISSING, ListConfig
 from torchmetrics import MeanMetric
+from pydantic import BaseModel as PydanticBaseModel
 
 from gluefactory.train import filter_parameters, pack_lr_parameters
 from gluefactory.utils.tools import set_seed, PRMetric
 from lightning_gluefactory import __module_name__, logger
 from lightning_gluefactory.datasets.homographies import HomographyDataset
-from lightning_gluefactory.datasets.base_dataset import BaseDataModule
+from lightning_gluefactory.datasets.base_dataset import BaseDataModule, BaseDatasetConfig
 
 import lightning as L
 
-from lightning_gluefactory.models.base_model import BaseModel
+from lightning_gluefactory.models.base_model import BaseModel, BaseModelConfig
+
+
+class OptimizerConfig(PydanticBaseModel):
+    """
+    Configuration for the optimizer.
+    """
+    _target_: str = "torch.optim.Adam"
+
+
+class LRScheduleConfig(PydanticBaseModel):
+    """
+    Configuration for the learning rate schedule.
+    """
+    type: Any = None
+    start: int = 0
+    exp_div_10: int = 0
+    on_epoch: bool = False
+    factor: float = 1.0
+
+
+class TrainConfig:
+    """
+    Configuration for the training.
+    """
+
+    seed: int
+    epochs: int = 1
+    opt_regexp: Optional[str] = None
+    optimizer: OptimizerConfig = OptimizerConfig()
+    optimizer_options: dict = field(default_factory=dict)
+    lr: float = 0.001
+    lr_schedule: LRScheduleConfig = LRScheduleConfig()
+    lr_scaling: List[Tuple[int, str]] = [(100, "dampingnet.const")]
+    eval_every_iter: int = 1000
+    save_every_iter: int = 5000
+    log_every_iter: int = 100
+    log_grad_every_iter: Optional[int] = None
+    test_every_epoch: int = 1
+    keep_last_checkpoints: int = 10
+    load_experiment: Optional[str] = None
+    median_metrics: List[str] = []
+    recall_metrics: dict = {}
+    pr_metrics: dict = {}
+    best_key: str = "loss/total"
+    dataset_callback_fn: Optional[str] = None
+    dataset_callback_on_val: Optional[bool] = False
+    clip_grad: Optional[float] = None
+    pr_curves: dict = {}
+    plot: bool = False
+    submodules: List[str] = []
+    strategy: str = "auto"
+    train_metric_prefix: str = "train/"
+    val_metric_prefix: str = "val/"
+
+
+class GlueFactoryConfig(PydanticBaseModel):
+    train: TrainConfig
+    data: BaseDatasetConfig
+    model: BaseModelConfig
+    callbacks: dict = {}
+
+    class Config:
+        arbitrary_types_allowed = True
+
 
 
 class GlueFactory(L.LightningModule):
-    def __init__(self, config: DictConfig):
+    def __init__(self, config: GlueFactoryConfig):
         super().__init__()
-        self.config: DictConfig = config
+        self.config: GlueFactoryConfig = config
 
         self.model: BaseModel = hydra.utils.instantiate(config.model)
         self.loss_fn = self.model.loss
@@ -150,7 +218,7 @@ class GlueFactory(L.LightningModule):
         return {"optimizer": optimizer, "lr_scheduler": scheduler}
 
 
-def training(config: OmegaConf):
+def training(config: GlueFactoryConfig):
     # TODO implement restore
 
     # TODO implement load experiment
@@ -214,13 +282,15 @@ def training(config: OmegaConf):
 
 
 @hydra.main(config_path="configs", config_name="train")
-def main(config: OmegaConf):
+def main(config: GlueFactoryConfig):
     print(OmegaConf.to_yaml(config))
-
+    OmegaConf.resolve(config)
+    config_dict = OmegaConf.to_container(config, resolve=True)
+    glue_factory_config = GlueFactoryConfig(*config_dict)
     training_path = Path(config.training_path)
     training_path.mkdir(parents=True, exist_ok=True)
 
-    training(config)
+    training(glue_factory_config)
 
 
 if __name__ == "__main__":

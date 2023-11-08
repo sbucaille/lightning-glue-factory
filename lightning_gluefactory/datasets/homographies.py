@@ -9,6 +9,7 @@ import logging
 import shutil
 import sys
 import tarfile
+from dataclasses import field, dataclass
 from pathlib import Path
 from typing import List
 
@@ -18,8 +19,10 @@ import matplotlib.pyplot as plt
 import numpy as np
 import omegaconf
 import torch
+from hydra.core.config_store import ConfigStore
 from omegaconf import OmegaConf, DictConfig
 from tqdm import tqdm
+from pydantic import BaseModel as PydanticBaseModel
 
 from gluefactory.geometry.homography import (
     compute_homography,
@@ -32,9 +35,59 @@ from gluefactory.utils.image import read_image
 from gluefactory.utils.tools import fork_rng
 from gluefactory.visualization.viz2d import plot_image_grid
 from gluefactory.datasets.augmentations import IdentityAugmentation, augmentations
-from lightning_gluefactory.datasets.base_dataset import BaseDataset, BaseDataModule
-
+from lightning_gluefactory.datasets.base_dataset import BaseDataset, BaseDataModule, BaseDatasetConfig
 import lightning as L
+
+
+class HomographyConfig(PydanticBaseModel):
+    difficulty: float = 0.8
+    translation: float = 1.0
+    max_angle: float = 60
+    n_angles: int = 10
+    patch_shape: List[int] = [640, 480]
+    min_convexity: float = 0.05
+
+
+class PhotometricConfig(PydanticBaseModel):
+    name: str = "dark"
+    p: float = 0.75
+
+
+class LoadFeaturesConfig(PydanticBaseModel):
+    do: bool = False
+    collate: bool = False
+    thresh: float = 0.0
+    max_num_keypoints: int = -1
+    force_num_keypoints: bool = False
+
+
+class HomographyDatasetConfig(BaseDatasetConfig):
+    """
+    Configuration for the HomographyDataset.
+    """
+    _target_: str = "lightning_gluefactory.datasets.homographies.HomographyDataset"
+
+    # image search
+    data_dir: str = "revisitop1m"
+    image_dir: str = "jpg"
+    image_list: str = "revisitop1m.txt"
+    glob: List[str] = ["*.jpg", "*.png", "*.jpeg", "*.JPG", "*.PNG"]
+
+    # splits
+    train_size: int = 100000
+    val_size: int = 1000
+    shuffle_seed: int = 42
+
+    # image loading
+    grayscale: bool = False
+    triplet: bool = False
+    right_only: bool = False
+    reseed: bool = False
+    homography: HomographyConfig = HomographyConfig()
+    photometric: PhotometricConfig = PhotometricConfig()
+    load_features: LoadFeaturesConfig = LoadFeaturesConfig()
+
+
 
 logger = logging.getLogger(__name__)
 
