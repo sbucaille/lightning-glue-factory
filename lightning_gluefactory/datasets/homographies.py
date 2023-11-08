@@ -7,6 +7,7 @@ artifacts.
 import argparse
 import logging
 import shutil
+import sys
 import tarfile
 from pathlib import Path
 from typing import List
@@ -50,22 +51,22 @@ def sample_homography(img, conf: dict, size: list):
 
 class HomographyDataModule(BaseDataModule):
     def __init__(
-            self,
-            data_dir: str,
-            image_dir: str,
-            image_list: str,
-            glob: list,
-            train_size: int,
-            val_size: int,
-            shuffle_seed: int,
-            grayscale: bool,
-            triplet: bool,
-            right_only: bool,
-            reseed: bool,
-            homography: DictConfig,
-            photometric: DictConfig,
-            load_features: DictConfig,
-            **kwargs,
+        self,
+        data_dir: str,
+        image_dir: str,
+        image_list: str,
+        glob: list,
+        train_size: int,
+        val_size: int,
+        shuffle_seed: int,
+        grayscale: bool,
+        triplet: bool,
+        right_only: bool,
+        reseed: bool,
+        homography: DictConfig,
+        photometric: DictConfig,
+        load_features: DictConfig,
+        **kwargs,
     ):
         super().__init__(**kwargs)
         self.data_dir = Path(data_dir)
@@ -96,7 +97,7 @@ class HomographyDataModule(BaseDataModule):
         if self.shuffle_seed is not None:
             np.random.RandomState(self.shuffle_seed).shuffle(images)
         train_images = images[: self.train_size]
-        val_images = images[self.train_size: self.train_size + self.val_size]
+        val_images = images[self.train_size : self.train_size + self.val_size]
         self.images = {"train": train_images, "val": val_images}
 
         if stage == "fit" or stage is None:
@@ -190,17 +191,17 @@ class HomographyDataModule(BaseDataModule):
 
 class HomographyDataset(torch.utils.data.Dataset):
     def __init__(
-            self,
-            data_dir: Path,
-            image_dir: Path,
-            image_names: List[str],
-            grayscale: bool,
-            triplet: bool,
-            homography: DictConfig,
-            photometric: DictConfig,
-            load_features: DictConfig,
-            right_only: bool,
-            reseed: bool,
+        self,
+        data_dir: Path,
+        image_dir: Path,
+        image_names: List[str],
+        grayscale: bool,
+        triplet: bool,
+        homography: DictConfig,
+        photometric: DictConfig,
+        load_features: DictConfig,
+        right_only: bool,
+        reseed: bool,
     ):
         self.data_dir = data_dir
         self.image_dir = image_dir
@@ -214,7 +215,7 @@ class HomographyDataset(torch.utils.data.Dataset):
         self.reseed = reseed
 
         assert (
-                self.photometric.name in augmentations.keys()
+            self.photometric.name in augmentations.keys()
         ), f'{self.photometric.name} not in {" ".join(augmentations.keys())}'
 
         self.photo_augment = augmentations[self.photometric.name](self.photometric)
@@ -235,10 +236,10 @@ class HomographyDataset(torch.utils.data.Dataset):
         )
         h, w = data["image"].shape[1:3]
         valid = (
-                (features["keypoints"][:, 0] >= 0)
-                & (features["keypoints"][:, 0] <= w - 1)
-                & (features["keypoints"][:, 1] >= 0)
-                & (features["keypoints"][:, 1] <= h - 1)
+            (features["keypoints"][:, 0] >= 0)
+            & (features["keypoints"][:, 0] <= w - 1)
+            & (features["keypoints"][:, 1] >= 0)
+            & (features["keypoints"][:, 1] <= h - 1)
         )
         features["keypoints"] = features["keypoints"][valid]
 
@@ -332,118 +333,6 @@ class HomographyDataset(torch.utils.data.Dataset):
         return len(self.image_names)
 
 
-#
-# class HomographyDataset(BaseDataset):
-#
-#     def __init__(
-#             self,
-#             data_dir: str,
-#             image_dir: str,
-#             image_list: str,
-#             glob: list,
-#             train_size: int,
-#             val_size: int,
-#             shuffle_seed: int,
-#             grayscale: bool,
-#             triplet: bool,
-#             right_only: bool,
-#             reseed: bool,
-#             homography: DictConfig,
-#             photometric: DictConfig,
-#             load_features: DictConfig,
-#             **kwargs,
-#     ):
-#         super().__init__(**kwargs)
-#         self.data_dir = data_dir
-#         self.image_dir = image_dir
-#         self.image_list = image_list
-#         self.glob = glob
-#         self.train_size = train_size
-#         self.val_size = val_size
-#         self.shuffle_seed = shuffle_seed
-#         self.grayscale = grayscale
-#         self.triplet = triplet
-#         self.right_only = right_only
-#         self.reseed = reseed
-#         self.homography = homography
-#         self.photometric = photometric
-#         self.load_features = load_features
-#
-#         logger.info(f"Creating dataset {self.__class__.__name__}")
-#         self._init()
-#
-#     def _init(self):
-#         data_dir = DATA_PATH / self.data_dir
-#         if not data_dir.exists():
-#             if self.data_dir == "/home/steven/ssd/revisitop1m":
-#                 logger.info("Downloading the revisitop1m dataset.")
-#                 self.download_revisitop1m()
-#             else:
-#                 raise FileNotFoundError(data_dir)
-#
-#         image_dir = data_dir / self.image_dir
-#         images = []
-#         if self.image_list is None:
-#             glob = [self.glob] if isinstance(self.glob, str) else self.glob
-#             for g in glob:
-#                 images += list(image_dir.glob("**/" + g))
-#             if len(images) == 0:
-#                 raise ValueError(f"Cannot find any image in folder: {image_dir}.")
-#             images = [i.relative_to(image_dir).as_posix() for i in images]
-#             images = sorted(images)  # for deterministic behavior
-#             logger.info("Found %d images in folder.", len(images))
-#         elif isinstance(self.image_list, (str, Path)):
-#             image_list = data_dir / self.image_list
-#             if not image_list.exists():
-#                 raise FileNotFoundError(f"Cannot find image list {image_list}.")
-#             images = image_list.read_text().rstrip("\n").split("\n")
-#             # for image in tqdm(images):
-#             #     if not (image_dir / image).exists():
-#             #         raise FileNotFoundError(image_dir / image)
-#             logger.info("Found %d images in list file.", len(images))
-#         elif isinstance(self.image_list, omegaconf.listconfig.ListConfig):
-#             images = self.image_list.to_container()
-#             for image in images:
-#                 if not (image_dir / image).exists():
-#                     raise FileNotFoundError(image_dir / image)
-#         else:
-#             raise ValueError(self.image_list)
-#
-#         if self.shuffle_seed is not None:
-#             np.random.RandomState(self.shuffle_seed).shuffle(images)
-#         train_images = images[: self.train_size]
-#         val_images = images[self.train_size: self.train_size + self.val_size]
-#         self.images = {"train": train_images, "val": val_images}
-#
-    # def download_revisitop1m(self):
-    #     data_dir = DATA_PATH / self.data_dir
-    #     tmp_dir = data_dir.parent / "revisitop1m_tmp"
-    #     if tmp_dir.exists():  # The previous download failed.
-    #         shutil.rmtree(tmp_dir)
-    #     image_dir = tmp_dir / self.image_dir
-    #     image_dir.mkdir(exist_ok=True, parents=True)
-    #     num_files = 100
-    #     url_base = "http://ptak.felk.cvut.cz/revisitop/revisitop1m/"
-    #     list_name = "revisitop1m.txt"
-    #     torch.hub.download_url_to_file(url_base + list_name, tmp_dir / list_name)
-    #     for n in tqdm(range(num_files), position=1):
-    #         tar_name = "revisitop1m.{}.tar.gz".format(n + 1)
-    #         tar_path = image_dir / tar_name
-    #         torch.hub.download_url_to_file(url_base + "jpg/" + tar_name, tar_path)
-    #         with tarfile.open(tar_path) as tar:
-    #             tar.extractall(path=image_dir)
-    #         tar_path.unlink()
-    #     shutil.move(tmp_dir, data_dir)
-#
-#     def get_dataset(self, split):
-#         return HomographyDataset(
-#
-#             self.conf,
-#             self.images[split],
-#             split
-#         )
-
-
 class _Dataset(torch.utils.data.Dataset):
     def __init__(self, conf, image_names, split):
         self.conf = conf
@@ -454,7 +343,7 @@ class _Dataset(torch.utils.data.Dataset):
         aug_conf = conf.photometric
         aug_name = aug_conf.name
         assert (
-                aug_name in augmentations.keys()
+            aug_name in augmentations.keys()
         ), f'{aug_name} not in {" ".join(augmentations.keys())}'
         self.photo_augment = augmentations[aug_name](aug_conf)
         self.left_augment = (
@@ -474,10 +363,10 @@ class _Dataset(torch.utils.data.Dataset):
         )
         h, w = data["image"].shape[1:3]
         valid = (
-                (features["keypoints"][:, 0] >= 0)
-                & (features["keypoints"][:, 0] <= w - 1)
-                & (features["keypoints"][:, 1] >= 0)
-                & (features["keypoints"][:, 1] <= h - 1)
+            (features["keypoints"][:, 0] >= 0)
+            & (features["keypoints"][:, 0] <= w - 1)
+            & (features["keypoints"][:, 1] >= 0)
+            & (features["keypoints"][:, 1] <= h - 1)
         )
         features["keypoints"] = features["keypoints"][valid]
 
@@ -593,12 +482,31 @@ def visualize(args):
     plt.show()
 
 
-if __name__ == "__main__":
-    from .. import logger  # overwrite the logger
+@hydra.main(config_path="../configs", config_name="data/homography")
+def main(config: DictConfig):
+    print(OmegaConf.to_yaml(config))
 
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--num_items", type=int, default=8)
-    parser.add_argument("--dpi", type=int, default=100)
-    parser.add_argument("dotlist", nargs="*")
-    args = parser.parse_intermixed_args()
-    visualize(args)
+    datamodule: BaseDataModule = hydra.utils.instantiate(config.data)
+    datamodule.setup("fit")
+    train_dataloader = datamodule.train_dataloader()
+    for batch in train_dataloader:
+        print(batch["name"])
+        images = []
+        for i in range(2):
+            images.append(batch[f"view{i}"]["image"][0].permute(1, 2, 0))
+        plot_image_grid(images, dpi=100)
+        plt.tight_layout()
+        plt.show()
+    sys.exit()
+
+
+if __name__ == "__main__":
+    # from .. import logger  # overwrite the logger
+
+    main()
+    # parser = argparse.ArgumentParser()
+    # parser.add_argument("--num_items", type=int, default=8)
+    # parser.add_argument("--dpi", type=int, default=100)
+    # parser.add_argument("dotlist", nargs="*")
+    # args = parser.parse_intermixed_args()
+    # visualize(args)
