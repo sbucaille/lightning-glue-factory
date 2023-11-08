@@ -144,17 +144,12 @@ class BaseDataModule(L.LightningDataModule):
     def get_dataloader(self, split: str):
         assert split in ["train", "val", "test"]
         dataset = self.__getattribute__(split + "_dataset")
-        sampler = LoopSampler(
-            self.batch_size,
-            len(dataset) if split == "train" else self.batch_size,
-        )
-        num_workers = self.num_workers
         return DataLoader(
             dataset,
             batch_size=self.batch_size,
             pin_memory=True,
             num_workers=self.num_workers,
-            sampler=sampler,
+            shuffle=split == "train" and self.shuffle_training,
             # worker_init_fn=worker_init_fn,
             persistent_workers=True,
             collate_fn=collate,
