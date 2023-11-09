@@ -2,6 +2,7 @@ defaults:
   - loggers/aimstack@logger
   - callbacks:
       - model_checkpointing
+      - learning_rate_monitor
 
 train:
   seed: "???"
