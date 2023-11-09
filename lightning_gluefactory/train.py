@@ -11,6 +11,7 @@ from aim import Figure, Image
 from lightning.pytorch.loggers import TensorBoardLogger
 from aim.pytorch_lightning import AimLogger
 from omegaconf import OmegaConf, DictConfig
+from pytorch_lightning.loggers import Logger
 from torchmetrics import MeanMetric
 
 from gluefactory.train import filter_parameters, pack_lr_parameters
@@ -52,17 +53,18 @@ class GlueFactory(L.LightningModule):
         data = batch
         pred = self.model(data)
         losses, _ = self.loss_fn(pred, data)
-        loss = torch.mean(losses["total"])
-        self.log(
-            self.config.train.train_metric_prefix + "loss/total",
-            loss,
-            rank_zero_only=True,
-        )
-        if torch.isnan(loss).any():
-            logger.log(f"Detected NAN, skipping iteration {batch_idx}")
-            del pred, data, loss, losses
-        else:
-            return loss
+        if torch.isnan(losses["total"]).any():
+            del pred, data, losses
+            return None
+        for k, v in losses.items():
+            losses[k] = torch.mean(v)
+            self.log(
+                self.config.train.train_metric_prefix + "loss/" + k,
+                losses[k],
+                rank_zero_only=True,
+            )
+        losses["loss"] = losses["total"]
+        return losses
 
     def on_validation_epoch_start(self) -> None:
         self.val_results = {}
@@ -70,8 +72,8 @@ class GlueFactory(L.LightningModule):
         if self.validation_plot:
             self.val_figures = []
             self.val_batch_ids_to_plot = np.random.choice(
-                self.config.data.val_size,
-                min(self.config.data.val_size, self.val_number_of_plots),
+                self.config.data.val_size // self.config.data.batch_size,
+                min(self.config.data.val_size // self.config.data.batch_size, self.val_number_of_plots),
                 replace=False,
             )
 
@@ -82,7 +84,7 @@ class GlueFactory(L.LightningModule):
         if self.validation_plot and batch_idx in self.val_batch_ids_to_plot:
             validation_figure = hydra.utils.call(self.val_plot_function, pred, data)
             for k, v in validation_figure.items():
-                self.logger.experiment.track(Image(v), name=k, step=batch_idx)
+                self.logger.experiment.track(Image(v), name=k, step=batch_idx, context={'subset': 'val'})
             # TODO pr_curves implementation
         numbers = {
             **metrics,
@@ -191,7 +193,7 @@ def training(config: OmegaConf):
 
     glue_factory = GlueFactory(config)
 
-    logger: AimLogger = (
+    logger: Logger = (
         hydra.utils.instantiate(config.logger)
         if getattr(config, "logger", None) is not None
         else None
@@ -199,10 +201,10 @@ def training(config: OmegaConf):
     logger.log_hyperparams(config)
     callbacks = [hydra.utils.instantiate(c) for c in config.callbacks.values()]
 
-    print(os.getcwd())
     trainer = L.Trainer(
         max_epochs=config.train.epochs,
         log_every_n_steps=config.train.log_every_iter,
+        val_check_interval=config.train.eval_every_iter,
         logger=logger,
         callbacks=callbacks,
         # strategy=config.train.strategy,
