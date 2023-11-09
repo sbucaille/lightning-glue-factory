@@ -13,6 +13,7 @@ from aim.pytorch_lightning import AimLogger
 from omegaconf import OmegaConf, DictConfig
 from pytorch_lightning.loggers import Logger
 from torchmetrics import MeanMetric
+from dotenv import load_dotenv
 
 from gluefactory.train import filter_parameters, pack_lr_parameters
 from gluefactory.utils.tools import set_seed, PRMetric
@@ -24,6 +25,9 @@ import lightning as L
 
 from lightning_gluefactory.models.base_model import BaseModel
 
+load_dotenv()
+
+AIM_REPO=os.getenv("AIM_REPO")
 
 class GlueFactory(L.LightningModule):
     def __init__(self, config: DictConfig):

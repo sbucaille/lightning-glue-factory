@@ -3,3 +3,4 @@ _target_: aim.pytorch_lightning.AimLogger
 experiment: ${experiment_name}
 train_metric_prefix: ${train.train_metric_prefix}
 val_metric_prefix: ${train.val_metric_prefix}
+repo: ${oc.env:AIM_REPO}
