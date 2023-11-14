@@ -13,8 +13,7 @@ from aim.pytorch_lightning import AimLogger
 from omegaconf import OmegaConf, DictConfig
 from pytorch_lightning.loggers import Logger
 from torchmetrics import MeanMetric
-from dotenv import load_dotenv
-
+import env
 from gluefactory.train import filter_parameters, pack_lr_parameters
 from gluefactory.utils.tools import set_seed, PRMetric
 from lightning_gluefactory import __module_name__, logger
@@ -25,9 +24,6 @@ import lightning as L
 
 from lightning_gluefactory.models.base_model import BaseModel
 
-load_dotenv()
-
-AIM_REPO=os.getenv("AIM_REPO")
 
 class GlueFactory(L.LightningModule):
     def __init__(self, config: DictConfig):
@@ -77,7 +73,10 @@ class GlueFactory(L.LightningModule):
             self.val_figures = []
             self.val_batch_ids_to_plot = np.random.choice(
                 self.config.data.val_size // self.config.data.batch_size,
-                min(self.config.data.val_size // self.config.data.batch_size, self.val_number_of_plots),
+                min(
+                    self.config.data.val_size // self.config.data.batch_size,
+                    self.val_number_of_plots,
+                ),
                 replace=False,
             )
 
@@ -88,7 +87,9 @@ class GlueFactory(L.LightningModule):
         if self.validation_plot and batch_idx in self.val_batch_ids_to_plot:
             validation_figure = hydra.utils.call(self.val_plot_function, pred, data)
             for k, v in validation_figure.items():
-                self.logger.experiment.track(Image(v), name=k, step=batch_idx, context={'subset': 'val'})
+                self.logger.experiment.track(
+                    Image(v), name=k, step=batch_idx, context={"subset": "val"}
+                )
             # TODO pr_curves implementation
         numbers = {
             **metrics,
