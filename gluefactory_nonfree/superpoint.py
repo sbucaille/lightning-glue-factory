@@ -66,9 +66,7 @@ def simple_nms(scores, radius):
     """
 
     def max_pool(x):
-        return torch.nn.functional.max_pool2d(
-            x, kernel_size=radius * 2 + 1, stride=1, padding=radius
-        )
+        return torch.nn.functional.max_pool2d(x, kernel_size=radius * 2 + 1, stride=1, padding=radius)
 
     zeros = torch.zeros_like(scores)
     max_mask = scores == max_pool(scores)
@@ -96,15 +94,11 @@ def sample_k_keypoints(keypoints, scores, k):
 
 def soft_argmax_refinement(keypoints, scores, radius: int):
     width = 2 * radius + 1
-    sum_ = torch.nn.functional.avg_pool2d(
-        scores[:, None], width, 1, radius, divisor_override=1
-    )
+    sum_ = torch.nn.functional.avg_pool2d(scores[:, None], width, 1, radius, divisor_override=1)
     ar = torch.arange(-radius, radius + 1).to(scores)
     kernel_x = ar[None].expand(width, -1)[None, None]
     dx = torch.nn.functional.conv2d(scores[:, None], kernel_x, padding=radius)
-    dy = torch.nn.functional.conv2d(
-        scores[:, None], kernel_x.transpose(2, 3), padding=radius
-    )
+    dy = torch.nn.functional.conv2d(scores[:, None], kernel_x.transpose(2, 3), padding=radius)
     dydx = torch.stack([dy[:, 0], dx[:, 0]], -1) / sum_[:, 0, :, :, None]
     refined_keypoints = []
     for i, kpts in enumerate(keypoints):
@@ -119,17 +113,11 @@ def sample_descriptors(keypoints, descriptors, s):
     keypoints = keypoints - s / 2 + 0.5
     keypoints /= torch.tensor(
         [(w * s - s / 2 - 0.5), (h * s - s / 2 - 0.5)],
-    ).to(
-        keypoints
-    )[None]
+    ).to(keypoints)[None]
     keypoints = keypoints * 2 - 1  # normalize to (-1, 1)
     args = {"align_corners": True} if torch.__version__ >= "1.3" else {}
-    descriptors = torch.nn.functional.grid_sample(
-        descriptors, keypoints.view(b, 1, -1, 2), mode="bilinear", **args
-    )
-    descriptors = torch.nn.functional.normalize(
-        descriptors.reshape(b, c, -1), p=2, dim=1
-    )
+    descriptors = torch.nn.functional.grid_sample(descriptors, keypoints.view(b, 1, -1, 2), mode="bilinear", **args)
+    descriptors = torch.nn.functional.normalize(descriptors.reshape(b, c, -1), p=2, dim=1)
     return descriptors
 
 
@@ -143,9 +131,7 @@ def sample_descriptors_fix_sampling(keypoints, descriptors, s: int = 8):
     descriptors = torch.nn.functional.grid_sample(
         descriptors, keypoints.view(b, 1, -1, 2), mode="bilinear", align_corners=False
     )
-    descriptors = torch.nn.functional.normalize(
-        descriptors.reshape(b, c, -1), p=2, dim=1
-    )
+    descriptors = torch.nn.functional.normalize(descriptors.reshape(b, c, -1), p=2, dim=1)
     return descriptors
 
 
@@ -169,7 +155,9 @@ class SuperPoint(BaseModel):
     }
     required_data_keys = ["image"]
 
-    checkpoint_url = "https://github.com/magicleap/SuperGluePretrainedNetwork/raw/master/models/weights/superpoint_v1.pth"  # noqa: E501
+    checkpoint_url = (
+        "https://github.com/magicleap/SuperGluePretrainedNetwork/raw/master/models/weights/superpoint_v1.pth"  # noqa: E501
+    )
 
     def _init(self, conf):
         self.relu = nn.ReLU(inplace=True)
@@ -191,13 +179,9 @@ class SuperPoint(BaseModel):
 
         if conf.has_descriptor:
             self.convDa = nn.Conv2d(c4, c5, kernel_size=3, stride=1, padding=1)
-            self.convDb = nn.Conv2d(
-                c5, conf.descriptor_dim, kernel_size=1, stride=1, padding=0
-            )
+            self.convDb = nn.Conv2d(c5, conf.descriptor_dim, kernel_size=1, stride=1, padding=0)
 
-        self.load_state_dict(
-            torch.hub.load_state_dict_from_url(str(self.checkpoint_url)), strict=False
-        )
+        self.load_state_dict(torch.hub.load_state_dict_from_url(str(self.checkpoint_url)), strict=False)
 
     def _forward(self, data):
         image = data["image"]
@@ -258,9 +242,7 @@ class SuperPoint(BaseModel):
             scores = scores[best_kp]
 
             # Separate into batches
-            keypoints = [
-                torch.stack(best_kp[1:3], dim=-1)[best_kp[0] == i] for i in range(b)
-            ]
+            keypoints = [torch.stack(best_kp[1:3], dim=-1)[best_kp[0] == i] for i in range(b)]
             scores = [scores[best_kp[0] == i] for i in range(b)]
 
             # Keep the k keypoints with highest score
@@ -275,28 +257,14 @@ class SuperPoint(BaseModel):
                 if self.conf.randomize_keypoints_training and self.training:
                     # instead of selecting top-k, sample k by score weights
                     keypoints, scores = list(
-                        zip(
-                            *[
-                                sample_k_keypoints(k, s, max_kps)
-                                for k, s in zip(keypoints, scores)
-                            ]
-                        )
+                        zip(*[sample_k_keypoints(k, s, max_kps) for k, s in zip(keypoints, scores)])
                     )
                 else:
-                    keypoints, scores = list(
-                        zip(
-                            *[
-                                top_k_keypoints(k, s, max_kps)
-                                for k, s in zip(keypoints, scores)
-                            ]
-                        )
-                    )
+                    keypoints, scores = list(zip(*[top_k_keypoints(k, s, max_kps) for k, s in zip(keypoints, scores)]))
                 keypoints, scores = list(keypoints), list(scores)
 
             if self.conf["refinement_radius"] > 0:
-                keypoints = soft_argmax_refinement(
-                    keypoints, dense_scores, self.conf["refinement_radius"]
-                )
+                keypoints = soft_argmax_refinement(keypoints, dense_scores, self.conf["refinement_radius"])
 
             # Convert (h, w) to (x, y)
             keypoints = [torch.flip(k, [1]).float() for k in keypoints]
@@ -309,9 +277,7 @@ class SuperPoint(BaseModel):
                     mode="random_c",
                     bounds=(
                         0,
-                        data.get("image_size", torch.tensor(image.shape[-2:]))
-                        .min()
-                        .item(),
+                        data.get("image_size", torch.tensor(image.shape[-2:])).min().item(),
                     ),
                 )
                 scores = pad_and_stack(scores, max_kps, -1, mode="zeros")
@@ -328,14 +294,10 @@ class SuperPoint(BaseModel):
                     desc = sample_descriptors_fix_sampling(keypoints, dense_desc, 8)
             else:
                 if self.conf.legacy_sampling:
-                    desc = [
-                        sample_descriptors(k[None], d[None], 8)[0]
-                        for k, d in zip(keypoints, dense_desc)
-                    ]
+                    desc = [sample_descriptors(k[None], d[None], 8)[0] for k, d in zip(keypoints, dense_desc)]
                 else:
                     desc = [
-                        sample_descriptors_fix_sampling(k[None], d[None], 8)[0]
-                        for k, d in zip(keypoints, dense_desc)
+                        sample_descriptors_fix_sampling(k[None], d[None], 8)[0] for k, d in zip(keypoints, dense_desc)
                     ]
 
             pred = {

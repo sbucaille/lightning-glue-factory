@@ -196,9 +196,7 @@ class Pose(TensorWrapper):
         """Transform a set of 3D points: T_A2B * p3D_A -> p3D_B."""
         return self.transform(p3D)
 
-    def __matmul__(
-        self, other: Union["Pose", torch.Tensor]
-    ) -> Union["Pose", torch.Tensor]:
+    def __matmul__(self, other: Union["Pose", torch.Tensor]) -> Union["Pose", torch.Tensor]:
         """Transform a set of 3D points: T_A2B * p3D_A -> p3D_B.
         or chain two SE(3) poses: T_B2C @ T_A2B -> T_A2C."""
         if isinstance(other, self.__class__):

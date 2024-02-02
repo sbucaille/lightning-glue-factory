@@ -17,12 +17,8 @@ def get_twoview(data, idx):
     assert idx == f"{li}to{ri}"
     data_lr = {k[:-4] + "0to1": v for k, v in data.items() if k[-4:] == f"{li}to{ri}"}
     data_rl = {k[:-4] + "1to0": v for k, v in data.items() if k[-4:] == f"{ri}ito{li}"}
-    data_l = {
-        k[:-1] + "0": v for k, v in data.items() if k[-1:] == li and k[-3:-1] != "to"
-    }
-    data_r = {
-        k[:-1] + "1": v for k, v in data.items() if k[-1:] == ri and k[-3:-1] != "to"
-    }
+    data_l = {k[:-1] + "0": v for k, v in data.items() if k[-1:] == li and k[-3:-1] != "to"}
+    data_r = {k[:-1] + "1": v for k, v in data.items() if k[-1:] == ri and k[-3:-1] != "to"}
     return {**data_lr, **data_rl, **data_l, **data_r}
 
 

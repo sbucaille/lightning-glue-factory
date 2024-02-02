@@ -25,9 +25,7 @@ class DeepLSD(BaseModel):
 
     def _init(self, conf):
         if self.conf.force_num_lines:
-            assert (
-                self.conf.max_num_lines is not None
-            ), "Missing max_num_lines parameter"
+            assert self.conf.max_num_lines is not None, "Missing max_num_lines parameter"
         ckpt = DATA_PATH / "weights/deeplsd_md.tar"
         if not ckpt.is_file():
             self.download_model(ckpt)
@@ -76,15 +74,9 @@ class DeepLSD(BaseModel):
             valid_mask = np.ones(n, dtype=bool)
             if self.conf.force_num_lines:
                 pad = self.conf.max_num_lines - n
-                segs = np.concatenate(
-                    [segs, np.zeros((pad, 2, 2), dtype=np.float32)], axis=0
-                )
-                scores = np.concatenate(
-                    [scores, np.zeros(pad, dtype=np.float32)], axis=0
-                )
-                valid_mask = np.concatenate(
-                    [valid_mask, np.zeros(pad, dtype=bool)], axis=0
-                )
+                segs = np.concatenate([segs, np.zeros((pad, 2, 2), dtype=np.float32)], axis=0)
+                scores = np.concatenate([scores, np.zeros(pad, dtype=np.float32)], axis=0)
+                valid_mask = np.concatenate([valid_mask, np.zeros(pad, dtype=bool)], axis=0)
 
             lines.append(segs)
             line_scores.append(scores)
@@ -93,12 +85,8 @@ class DeepLSD(BaseModel):
         # Batch if possible
         if len(image) == 1 or self.conf.force_num_lines:
             lines = torch.tensor(lines, dtype=torch.float, device=image.device)
-            line_scores = torch.tensor(
-                line_scores, dtype=torch.float, device=image.device
-            )
-            valid_lines = torch.tensor(
-                valid_lines, dtype=torch.bool, device=image.device
-            )
+            line_scores = torch.tensor(line_scores, dtype=torch.float, device=image.device)
+            valid_lines = torch.tensor(valid_lines, dtype=torch.bool, device=image.device)
 
         return {"lines": lines, "line_scores": line_scores, "valid_lines": valid_lines}
 

@@ -52,9 +52,7 @@ class NearestNeighborMatcher(BaseModel):
     def _forward(self, data):
         sim = torch.einsum("bnd,bmd->bnm", data["descriptors0"], data["descriptors1"])
         matches0 = find_nn(sim, self.conf.ratio_thresh, self.conf.distance_thresh)
-        matches1 = find_nn(
-            sim.transpose(1, 2), self.conf.ratio_thresh, self.conf.distance_thresh
-        )
+        matches1 = find_nn(sim.transpose(1, 2), self.conf.ratio_thresh, self.conf.distance_thresh)
         if self.conf.mutual_check:
             matches0, matches1 = mutual_check(matches0, matches1)
         b, m, n = sim.shape

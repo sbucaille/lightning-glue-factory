@@ -54,14 +54,10 @@ class ImagePreprocessor:
         }
         if self.conf.square_pad:
             sl = max(img.shape[-2:])
-            data["image"] = torch.zeros(
-                *img.shape[:-2], sl, sl, device=img.device, dtype=img.dtype
-            )
+            data["image"] = torch.zeros(*img.shape[:-2], sl, sl, device=img.device, dtype=img.dtype)
             data["image"][:, : img.shape[-2], : img.shape[-1]] = img
             if self.conf.add_padding_mask:
-                data["padding_mask"] = torch.zeros(
-                    *img.shape[:-3], 1, sl, sl, device=img.device, dtype=torch.bool
-                )
+                data["padding_mask"] = torch.zeros(*img.shape[:-3], 1, sl, sl, device=img.device, dtype=torch.bool)
                 data["padding_mask"][:, : img.shape[-2], : img.shape[-1]] = True
 
         else:
@@ -83,9 +79,7 @@ class ImagePreprocessor:
         side_size = self.conf.resize
         aspect_ratio = w / h
         if side not in ("short", "long", "vert", "horz"):
-            raise ValueError(
-                f"side can be one of 'short', 'long', 'vert', and 'horz'. Got '{side}'"
-            )
+            raise ValueError(f"side can be one of 'short', 'long', 'vert', and 'horz'. Got '{side}'")
         if side == "vert":
             size = side_size, int(side_size * aspect_ratio)
         elif side == "horz":

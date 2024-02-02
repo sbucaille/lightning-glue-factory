@@ -34,9 +34,7 @@ class RadioHideTool(ToolToggleBase):
     default_toggled = False
     radio_group = "default"
 
-    def __init__(
-        self, *args, options=[], active=None, callback_fn=None, keymap="R", **kwargs
-    ):
+    def __init__(self, *args, options=[], active=None, callback_fn=None, keymap="R", **kwargs):
         super().__init__(*args, **kwargs)
         self.f = 1.0
         self.options = options
@@ -144,9 +142,7 @@ class KeypointRankingPlot:
             kp0, kp1 = pred["keypoints0"][0], pred["keypoints1"][0]
             sc0, sc1 = pred["keypoint_scores0"][0], pred["keypoint_scores1"][0]
 
-            plot_keypoints(
-                [kp0, kp1], axes=axes[i], colors=[cm_ranking(sc0), cm_ranking(sc1)]
-            )
+            plot_keypoints([kp0, kp1], axes=axes[i], colors=[cm_ranking(sc0), cm_ranking(sc1)])
 
 
 class KeypointScoresPlot:
@@ -158,9 +154,7 @@ class KeypointScoresPlot:
             pred = preds[name]
             kp0, kp1 = pred["keypoints0"][0], pred["keypoints1"][0]
             sc0, sc1 = pred["keypoint_scores0"][0], pred["keypoint_scores1"][0]
-            plot_keypoints(
-                [kp0, kp1], axes=axes[i], colors=[cm_RdGn(sc0), cm_RdGn(sc1)]
-            )
+            plot_keypoints([kp0, kp1], axes=axes[i], colors=[cm_RdGn(sc0), cm_RdGn(sc1)])
 
 
 class HeatmapPlot:
@@ -194,11 +188,7 @@ class MatchesPlot:
 
     def __init__(self, fig, axes, data, preds):
         self.fig = fig
-        self.sbpars = {
-            k: v
-            for k, v in vars(fig.subplotpars).items()
-            if k in ["left", "right", "top", "bottom"]
-        }
+        self.sbpars = {k: v for k, v in vars(fig.subplotpars).items() if k in ["left", "right", "top", "bottom"]}
 
         for i, name in enumerate(preds):
             pred = preds[name]
@@ -229,11 +219,7 @@ class LineMatchesPlot:
 
     def __init__(self, fig, axes, data, preds):
         self.fig = fig
-        self.sbpars = {
-            k: v
-            for k, v in vars(fig.subplotpars).items()
-            if k in ["left", "right", "top", "bottom"]
-        }
+        self.sbpars = {k: v for k, v in vars(fig.subplotpars).items() if k in ["left", "right", "top", "bottom"]}
 
         for i, name in enumerate(preds):
             pred = preds[name]
@@ -251,11 +237,7 @@ class GtMatchesPlot:
 
     def __init__(self, fig, axes, data, preds):
         self.fig = fig
-        self.sbpars = {
-            k: v
-            for k, v in vars(fig.subplotpars).items()
-            if k in ["left", "right", "top", "bottom"]
-        }
+        self.sbpars = {k: v for k, v in vars(fig.subplotpars).items() if k in ["left", "right", "top", "bottom"]}
 
         for i, name in enumerate(preds):
             pred = preds[name]
@@ -287,11 +269,7 @@ class GtLineMatchesPlot:
 
     def __init__(self, fig, axes, data, preds):
         self.fig = fig
-        self.sbpars = {
-            k: v
-            for k, v in vars(fig.subplotpars).items()
-            if k in ["left", "right", "top", "bottom"]
-        }
+        self.sbpars = {k: v for k, v in vars(fig.subplotpars).items() if k in ["left", "right", "top", "bottom"]}
 
         for i, name in enumerate(preds):
             pred = preds[name]
@@ -310,11 +288,7 @@ class HomographyMatchesPlot:
 
     def __init__(self, fig, axes, data, preds):
         self.fig = fig
-        self.sbpars = {
-            k: v
-            for k, v in vars(fig.subplotpars).items()
-            if k in ["left", "right", "top", "bottom"]
-        }
+        self.sbpars = {k: v for k, v in vars(fig.subplotpars).items() if k in ["left", "right", "top", "bottom"]}
 
         add_whitespace_bottom(fig, 0.1)
 
@@ -370,11 +344,7 @@ class EpipolarMatchesPlot:
     def __init__(self, fig, axes, data, preds):
         self.fig = fig
         self.axes = axes
-        self.sbpars = {
-            k: v
-            for k, v in vars(fig.subplotpars).items()
-            if k in ["left", "right", "top", "bottom"]
-        }
+        self.sbpars = {k: v for k, v in vars(fig.subplotpars).items() if k in ["left", "right", "top", "bottom"]}
 
         add_whitespace_bottom(fig, 0.1)
 
@@ -442,11 +412,7 @@ class EpipolarMatchesPlot:
         art = event.artist
         if art.get_label() is not None:
             if hasattr(art, "epilines"):
-                [
-                    x.set_visible(not x.get_visible())
-                    for x in art.epilines
-                    if x is not None
-                ]
+                [x.set_visible(not x.get_visible()) for x in art.epilines if x is not None]
             else:
                 xy1 = art.xy1
                 xy2 = art.xy2

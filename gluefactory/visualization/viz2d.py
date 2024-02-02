@@ -68,9 +68,7 @@ def plot_images(imgs, titles=None, cmaps="gray", dpi=100, pad=0.5, adaptive=True
     else:
         ratios = [4 / 3] * n
     figsize = [sum(ratios) * 4.5, 4.5]
-    fig, axs = plt.subplots(
-        1, n, figsize=figsize, dpi=dpi, gridspec_kw={"width_ratios": ratios}
-    )
+    fig, axs = plt.subplots(1, n, figsize=figsize, dpi=dpi, gridspec_kw={"width_ratios": ratios})
     if n == 1:
         axs = [axs]
     for i, (img, ax) in enumerate(zip(imgs, axs)):
@@ -111,9 +109,7 @@ def plot_image_grid(
 
     figsize = [sum(ratios) * figs, nr * figs]
     if fig is None:
-        fig, axs = plt.subplots(
-            nr, n, figsize=figsize, dpi=dpi, gridspec_kw={"width_ratios": ratios}
-        )
+        fig, axs = plt.subplots(nr, n, figsize=figsize, dpi=dpi, gridspec_kw={"width_ratios": ratios})
     else:
         axs = fig.subplots(nr, n, gridspec_kw={"width_ratios": ratios})
         fig.figure.set_size_inches(figsize)
@@ -256,9 +252,7 @@ def add_text(
     return t
 
 
-def draw_epipolar_line(
-    line, axis, imshape=None, color="b", label=None, alpha=1.0, visible=True
-):
+def draw_epipolar_line(line, axis, imshape=None, color="b", label=None, alpha=1.0, visible=True):
     if imshape is not None:
         h, w = imshape[:2]
     else:
@@ -307,9 +301,7 @@ def get_line(F, kp):
     return np.dot(F, hom_kp)
 
 
-def plot_epipolar_lines(
-    pts0, pts1, F, color="b", axes=None, labels=None, a=1.0, visible=True
-):
+def plot_epipolar_lines(pts0, pts1, F, color="b", axes=None, labels=None, a=1.0, visible=True):
     if axes is None:
         axes = plt.gcf().axes
     assert len(axes) == 2

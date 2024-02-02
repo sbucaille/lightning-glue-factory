@@ -21,9 +21,7 @@ class LoFTRModule(BaseModel):
         if self.conf.zero_pad:
             image0, mask0 = self.zero_pad(image0)
             image1, mask1 = self.zero_pad(image1)
-            res = self.net(
-                {"image0": image0, "image1": image1, "mask0": mask0, "mask1": mask1}
-            )
+            res = self.net({"image0": image0, "image1": image1, "mask0": mask0, "mask1": mask1})
             res = self.net({"image0": image0, "image1": image1})
         else:
             res = self.net({"image0": image0, "image1": image1})

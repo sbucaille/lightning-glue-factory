@@ -15,6 +15,4 @@ def run_benchmark(benchmark, eval_conf, experiment_dir, model=None):
     bm = get_benchmark(benchmark)
 
     pipeline = bm(eval_conf)
-    return pipeline.run(
-        experiment_dir, model=model, overwrite=True, overwrite_eval=True
-    )
+    return pipeline.run(experiment_dir, model=model, overwrite=True, overwrite_eval=True)

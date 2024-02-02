@@ -15,9 +15,7 @@ class BaseEstimator:
 
     def __init__(self, conf):
         """Perform some logic and call the _init method of the child model."""
-        default_conf = OmegaConf.merge(
-            self.base_default_conf, OmegaConf.create(self.default_conf)
-        )
+        default_conf = OmegaConf.merge(self.base_default_conf, OmegaConf.create(self.default_conf))
         if self.strict_conf:
             OmegaConf.set_struct(default_conf, True)
 

@@ -6,20 +6,19 @@ from lightning_gluefactory.models.base_model import BaseModel
 
 
 class HomographyMatcher(BaseModel):
-
     required_data_keys = ["H_0to1"]
 
     def __init__(
-            self,
-            use_points: bool,
-            th_positive: float,
-            th_negative: float,
-            use_lines: bool,
-            n_line_sampled_pts: int,
-            line_perp_dist_th: int,
-            overlap_th: float,
-            min_visibility_th: float,
-            **kwargs
+        self,
+        use_points: bool,
+        th_positive: float,
+        th_negative: float,
+        use_lines: bool,
+        n_line_sampled_pts: int,
+        line_perp_dist_th: int,
+        overlap_th: float,
+        min_visibility_th: float,
+        **kwargs,
     ):
         self.use_points = use_points
         self.th_positive = th_positive

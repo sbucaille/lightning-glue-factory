@@ -121,9 +121,7 @@ def compute_homography(pts1_, pts2_, shape):
         return [0, 0, 0, p[0], p[1], 1, -p[0] * q[1], -p[1] * q[1]]
 
     a_mat = np.stack([f(pts1[i], pts2[i]) for i in range(4) for f in (ax, ay)], axis=0)
-    p_mat = np.transpose(
-        np.stack([[pts2[i][j] for i in range(4) for j in range(2)]], axis=0)
-    )
+    p_mat = np.transpose(np.stack([[pts2[i][j] for i in range(4) for j in range(2)]], axis=0))
     homography = np.transpose(np.linalg.solve(a_mat, p_mat))
     return flat2mat(homography)
 
@@ -184,27 +182,18 @@ def warp_points_torch(points, H, inverse=True):
 
 def seg_equation(segs):
     # calculate list of start, end and midpoints points from both lists
-    start_points, end_points = to_homogeneous(segs[..., 0, :]), to_homogeneous(
-        segs[..., 1, :]
-    )
+    start_points, end_points = to_homogeneous(segs[..., 0, :]), to_homogeneous(segs[..., 1, :])
     # Compute the line equations as ax + by + c = 0 , where x^2 + y^2 = 1
     lines = torch.cross(start_points, end_points, dim=-1)
     lines_norm = torch.sqrt(lines[..., 0] ** 2 + lines[..., 1] ** 2)[..., None]
-    assert torch.all(
-        lines_norm > 0
-    ), "Error: trying to compute the equation of a line with a single point"
+    assert torch.all(lines_norm > 0), "Error: trying to compute the equation of a line with a single point"
     lines = lines / lines_norm
     return lines
 
 
 def is_inside_img(pts: torch.Tensor, img_shape: Tuple[int, int]):
     h, w = img_shape
-    return (
-        (pts >= 0).all(dim=-1)
-        & (pts[..., 0] < w)
-        & (pts[..., 1] < h)
-        & (~torch.isinf(pts).any(dim=-1))
-    )
+    return (pts >= 0).all(dim=-1) & (pts[..., 0] < w) & (pts[..., 1] < h) & (~torch.isinf(pts).any(dim=-1))
 
 
 def shrink_segs_to_img(segs: torch.Tensor, img_shape: Tuple[int, int]) -> torch.Tensor:
@@ -219,9 +208,7 @@ def shrink_segs_to_img(segs: torch.Tensor, img_shape: Tuple[int, int]) -> torch.
     # Project the segments to the reference image
     segs = segs.clone()
     eqs = seg_equation(segs)
-    x0, y0 = torch.tensor([1.0, 0, 0.0], device=device), torch.tensor(
-        [0.0, 1, 0], device=device
-    )
+    x0, y0 = torch.tensor([1.0, 0, 0.0], device=device), torch.tensor([0.0, 1, 0], device=device)
     x0 = x0.repeat(eqs.shape[:-1] + (1,))
     y0 = y0.repeat(eqs.shape[:-1] + (1,))
     pt_x0s = torch.cross(eqs, x0, dim=-1)
@@ -263,17 +250,11 @@ def shrink_segs_to_img(segs: torch.Tensor, img_shape: Tuple[int, int]) -> torch.
     mask = (segs[..., 1, 1] > (h - 1)) & pt_yHs_valid
     segs[mask, 1, :] = pt_yHs[mask]
 
-    assert (
-        torch.all(segs >= 0)
-        and torch.all(segs[..., 0] < w)
-        and torch.all(segs[..., 1] < h)
-    )
+    assert torch.all(segs >= 0) and torch.all(segs[..., 0] < w) and torch.all(segs[..., 1] < h)
     return segs
 
 
-def warp_lines_torch(
-    lines, H, inverse=True, dst_shape: Tuple[int, int] = None
-) -> Tuple[torch.Tensor, torch.Tensor]:
+def warp_lines_torch(lines, H, inverse=True, dst_shape: Tuple[int, int] = None) -> Tuple[torch.Tensor, torch.Tensor]:
     """
     :param lines: A tensor of shape (B, N, 2, 2)
               where B is the batch size, N the number of lines.
@@ -284,16 +265,12 @@ def warp_lines_torch(
     """
     device = lines.device
     batch_size = len(lines)
-    lines = warp_points_torch(lines.reshape(batch_size, -1, 2), H, inverse).reshape(
-        lines.shape
-    )
+    lines = warp_points_torch(lines.reshape(batch_size, -1, 2), H, inverse).reshape(lines.shape)
 
     if dst_shape is None:
         return lines, torch.ones(lines.shape[:-2], dtype=torch.bool, device=device)
 
-    out_img = torch.any(
-        (lines < 0) | (lines >= torch.tensor(dst_shape[::-1], device=device)), -1
-    )
+    out_img = torch.any((lines < 0) | (lines >= torch.tensor(dst_shape[::-1], device=device)), -1)
     valid = ~out_img.all(-1)
     any_out_of_img = out_img.any(-1)
     lines_to_trim = valid & any_out_of_img
@@ -314,9 +291,7 @@ def sym_homography_error(kpts0, kpts1, T_0to1):
     kpts0_1 = from_homogeneous(to_homogeneous(kpts0) @ T_0to1.transpose(-1, -2))
     dist0_1 = ((kpts0_1 - kpts1) ** 2).sum(-1).sqrt()
 
-    kpts1_0 = from_homogeneous(
-        to_homogeneous(kpts1) @ torch.pinverse(T_0to1.transpose(-1, -2))
-    )
+    kpts1_0 = from_homogeneous(to_homogeneous(kpts1) @ torch.pinverse(T_0to1.transpose(-1, -2)))
     dist1_0 = ((kpts1_0 - kpts0) ** 2).sum(-1).sqrt()
 
     return (dist0_1 + dist1_0) / 2.0

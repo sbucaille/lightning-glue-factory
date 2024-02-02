@@ -66,16 +66,11 @@ def sym_epipolar_distance_all(p0, p1, E, eps=1e-15):
     E_p0 = torch.einsum("...ij,...nj->...ni", E, p0)
     Et_p1 = torch.einsum("...ij,...mi->...mj", E, p1)
     d0 = p1_E_p0 / (E_p0[..., None, 0] ** 2 + E_p0[..., None, 1] ** 2 + eps).sqrt()
-    d1 = (
-        p1_E_p0
-        / (Et_p1[..., None, :, 0] ** 2 + Et_p1[..., None, :, 1] ** 2 + eps).sqrt()
-    )
+    d1 = p1_E_p0 / (Et_p1[..., None, :, 0] ** 2 + Et_p1[..., None, :, 1] ** 2 + eps).sqrt()
     return (d0 + d1) / 2
 
 
-def generalized_epi_dist(
-    kpts0, kpts1, cam0: Camera, cam1: Camera, T_0to1: Pose, all=True, essential=True
-):
+def generalized_epi_dist(kpts0, kpts1, cam0: Camera, cam1: Camera, T_0to1: Pose, all=True, essential=True):
     if essential:
         E = T_to_E(T_0to1)
         p0 = cam0.image2cam(kpts0)

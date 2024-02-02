@@ -106,9 +106,7 @@ class ETH3DPipeline(EvalPipeline):
         return s, {}, r
 
 
-def plot_pr_curve(
-    models_name, results, dst_file="eth3d_pr_curve.pdf", title=None, suffix=""
-):
+def plot_pr_curve(models_name, results, dst_file="eth3d_pr_curve.pdf", title=None, suffix=""):
     plt.figure()
     f_scores = np.linspace(0.2, 0.9, num=8)
     for f_score in f_scores:
@@ -174,9 +172,7 @@ if __name__ == "__main__":
     experiment_dir.mkdir(exist_ok=True)
 
     pipeline = ETH3DPipeline(conf)
-    s, f, r = pipeline.run(
-        experiment_dir, overwrite=args.overwrite, overwrite_eval=args.overwrite_eval
-    )
+    s, f, r = pipeline.run(experiment_dir, overwrite=args.overwrite, overwrite_eval=args.overwrite_eval)
 
     # print results
     for k, v in r.items():

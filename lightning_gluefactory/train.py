@@ -1,14 +1,12 @@
 from pathlib import Path
 
 import hydra
-from omegaconf import OmegaConf, DictConfig
+import lightning as L
+from omegaconf import DictConfig, OmegaConf
 from pytorch_lightning.loggers import Logger
-import env
+
 from gluefactory.utils.tools import set_seed
 from lightning_gluefactory.datasets.base_dataset import BaseDataModule
-
-import lightning as L
-
 from lightning_gluefactory.glue_factory import GlueFactory
 
 
@@ -53,11 +51,7 @@ def training(config: DictConfig):
 
     glue_factory = GlueFactory(config)
 
-    logger: Logger = (
-        hydra.utils.instantiate(config.logger)
-        if getattr(config, "logger", None) is not None
-        else None
-    )
+    logger: Logger = hydra.utils.instantiate(config.logger) if getattr(config, "logger", None) is not None else None
     logger.log_hyperparams(config)
     callbacks = [hydra.utils.instantiate(c) for c in config.callbacks.values()]
 

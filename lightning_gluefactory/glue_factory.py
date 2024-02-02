@@ -10,7 +10,6 @@ from gluefactory.train import filter_parameters, pack_lr_parameters
 from lightning_gluefactory.models.base_model import BaseModel
 
 
-
 class GlueFactory(L.LightningModule):
     def __init__(self, config: DictConfig):
         super().__init__()
@@ -73,16 +72,11 @@ class GlueFactory(L.LightningModule):
         if self.validation_plot and batch_idx in self.val_batch_ids_to_plot:
             validation_figure = hydra.utils.call(self.val_plot_function, pred, data)
             for k, v in validation_figure.items():
-                self.logger.experiment.track(
-                    Image(v), name=k, step=batch_idx, context={"subset": "val"}
-                )
+                self.logger.experiment.track(Image(v), name=k, step=batch_idx, context={"subset": "val"})
             # TODO pr_curves implementation
         numbers = {
             **metrics,
-            **{
-                self.config.train.val_metric_prefix + "loss/" + k: v
-                for k, v in losses.items()
-            },
+            **{self.config.train.val_metric_prefix + "loss/" + k: v for k, v in losses.items()},
         }
 
         for k, v in numbers.items():
@@ -113,9 +107,7 @@ class GlueFactory(L.LightningModule):
         if self.config.train.opt_regexp:
             params = filter_parameters(params, self.config.train.opt_regexp)
         # all_params = [p for n, p in params]
-        lr_params = pack_lr_parameters(
-            params, self.config.train.lr, self.config.train.lr_scaling
-        )
+        lr_params = pack_lr_parameters(params, self.config.train.lr, self.config.train.lr_scaling)
         optimizer = hydra.utils.instantiate(
             self.config.train.optimizer,
             lr_params,
@@ -127,11 +119,7 @@ class GlueFactory(L.LightningModule):
             if self.config.train.lr_schedule.type is None:
                 return 1
             if self.config.train.lr_schedule.type == "factor":
-                return (
-                    1.0
-                    if it < self.config.train.lr_schedule.start
-                    else self.config.train.lr_schedule.factor
-                )
+                return 1.0 if it < self.config.train.lr_schedule.start else self.config.train.lr_schedule.factor
             if self.config.train.lr_schedule.type == "exp":
                 gam = 10 ** (-1 / self.config.train.lr_schedule.exp_div_10)
                 return 1.0 if it < self.config.train.lr_schedule.start else gam

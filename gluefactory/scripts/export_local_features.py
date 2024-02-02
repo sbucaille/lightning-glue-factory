@@ -116,12 +116,7 @@ if __name__ == "__main__":
             run_export(feature_file, data_root / scene / "images", args)
     else:
         data_root = Path(DATA_PATH, args.dataset)
-        feature_file = Path(
-            DATA_PATH, "exports", args.export_prefix + export_name + ".h5"
-        )
+        feature_file = Path(DATA_PATH, "exports", args.export_prefix + export_name + ".h5")
         feature_file.parent.mkdir(exist_ok=True, parents=True)
-        logging.info(
-            f"Export local features for dataset {args.dataset} "
-            f"to file {feature_file}"
-        )
+        logging.info(f"Export local features for dataset {args.dataset} " f"to file {feature_file}")
         run_export(feature_file, data_root)

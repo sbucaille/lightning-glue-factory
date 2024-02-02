@@ -40,12 +40,8 @@ class NLLLoss(nn.Module):
         log_assignment = pred["log_assignment"]
         if weights is None:
             weights = self.loss_fn(log_assignment, data)
-        nll_pos, nll_neg, num_pos, num_neg = weight_loss(
-            log_assignment, weights, gamma=self.conf.gamma_f
-        )
-        nll = (
-            self.conf.nll_balancing * nll_pos + (1 - self.conf.nll_balancing) * nll_neg
-        )
+        nll_pos, nll_neg, num_pos, num_neg = weight_loss(log_assignment, weights, gamma=self.conf.gamma_f)
+        nll = self.conf.nll_balancing * nll_pos + (1 - self.conf.nll_balancing) * nll_neg
 
         return (
             nll,

@@ -25,15 +25,15 @@ class TwoViewPipeline(BaseModel):
     strict_conf = False  # need to pass new confs to children models
 
     def __init__(
-            self,
-            allow_no_extract: bool,
-            run_gt_in_forward: bool,
-            extractor=None,
-            matcher=None,
-            filter=None,
-            solver=None,
-            ground_truth=None,
-            **kwargs
+        self,
+        allow_no_extract: bool,
+        run_gt_in_forward: bool,
+        extractor=None,
+        matcher=None,
+        filter=None,
+        solver=None,
+        ground_truth=None,
+        **kwargs,
     ):
         self.allow_no_extract = allow_no_extract
         self.run_gt_in_forward = run_gt_in_forward

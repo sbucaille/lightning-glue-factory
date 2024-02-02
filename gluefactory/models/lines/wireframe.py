@@ -13,15 +13,11 @@ def sample_descriptors_corner_conv(keypoints, descriptors, s: int = 8):
     descriptors = torch.nn.functional.grid_sample(
         descriptors, keypoints.view(b, 1, -1, 2), mode="bilinear", align_corners=False
     )
-    descriptors = torch.nn.functional.normalize(
-        descriptors.reshape(b, c, -1), p=2, dim=1
-    )
+    descriptors = torch.nn.functional.normalize(descriptors.reshape(b, c, -1), p=2, dim=1)
     return descriptors
 
 
-def lines_to_wireframe(
-    lines, line_scores, all_descs, s, nms_radius, force_num_lines, max_num_lines
-):
+def lines_to_wireframe(lines, line_scores, all_descs, s, nms_radius, force_num_lines, max_num_lines):
     """Given a set of lines, their score and dense descriptors,
         merge close-by endpoints and compute a wireframe defined by
         its junctions and connectivity.
@@ -88,14 +84,11 @@ def lines_to_wireframe(
             junctions[-1] = torch.cat(
                 [
                     junctions[-1],
-                    torch.rand(missing, 2).to(lines)
-                    * lines.new_tensor([[w - 1, h - 1]]),
+                    torch.rand(missing, 2).to(lines) * lines.new_tensor([[w - 1, h - 1]]),
                 ],
                 dim=0,
             )
-            junc_scores[-1] = torch.cat(
-                [junc_scores[-1], torch.zeros(missing).to(lines)], dim=0
-            )
+            junc_scores[-1] = torch.cat([junc_scores[-1], torch.zeros(missing).to(lines)], dim=0)
 
             junc_connect = torch.eye(max_num_lines * 2, dtype=torch.bool, device=device)
             pairs = clusters.reshape(-1, 2)  # these pairs are connected by a line
@@ -153,21 +146,14 @@ class WireframeExtractor(BaseModel):
     required_data_keys = ["image"]
 
     def _init(self, conf):
-        self.point_extractor = get_model(self.conf.point_extractor.name)(
-            self.conf.point_extractor
-        )
-        self.line_extractor = get_model(self.conf.line_extractor.name)(
-            self.conf.line_extractor
-        )
+        self.point_extractor = get_model(self.conf.point_extractor.name)(self.conf.point_extractor)
+        self.line_extractor = get_model(self.conf.line_extractor.name)(self.conf.line_extractor)
 
     def _forward(self, data):
         b_size, _, h, w = data["image"].shape
         device = data["image"].device
 
-        if (
-            not self.conf.point_extractor.force_num_keypoints
-            or not self.conf.line_extractor.force_num_lines
-        ):
+        if not self.conf.point_extractor.force_num_keypoints or not self.conf.line_extractor.force_num_lines:
             assert b_size == 1, "Only batch size of 1 accepted for non padded inputs"
 
         # Line detection
@@ -177,27 +163,21 @@ class WireframeExtractor(BaseModel):
 
         # Keypoint prediction
         pred = {**pred, **self.point_extractor(data)}
-        assert (
-            "dense_descriptors" in pred
-        ), "The KP extractor should return dense descriptors"
+        assert "dense_descriptors" in pred, "The KP extractor should return dense descriptors"
         s_desc = data["image"].shape[2] // pred["dense_descriptors"].shape[2]
 
         # Remove keypoints that are too close to line endpoints
         if self.conf.wireframe_params.merge_points:
             line_endpts = pred["lines"].reshape(b_size, -1, 2)
-            dist_pt_lines = torch.norm(
-                pred["keypoints"][:, :, None] - line_endpts[:, None], dim=-1
-            )
+            dist_pt_lines = torch.norm(pred["keypoints"][:, :, None] - line_endpts[:, None], dim=-1)
             # For each keypoint, mark it as valid or to remove
-            pts_to_remove = torch.any(
-                dist_pt_lines < self.conf.wireframe_params.nms_radius, dim=2
-            )
+            pts_to_remove = torch.any(dist_pt_lines < self.conf.wireframe_params.nms_radius, dim=2)
             if self.conf.point_extractor.force_num_keypoints:
                 # Replace the points with random ones
                 num_to_remove = pts_to_remove.int().sum().item()
-                pred["keypoints"][pts_to_remove] = torch.rand(
-                    num_to_remove, 2, device=device
-                ) * pred["keypoints"].new_tensor([[w - 1, h - 1]])
+                pred["keypoints"][pts_to_remove] = torch.rand(num_to_remove, 2, device=device) * pred[
+                    "keypoints"
+                ].new_tensor([[w - 1, h - 1]])
                 pred["keypoint_scores"][pts_to_remove] = 0
                 for bs in range(b_size):
                     descrs = sample_descriptors_corner_conv(
@@ -210,17 +190,12 @@ class WireframeExtractor(BaseModel):
                 # Simply remove them (we assume batch_size = 1 here)
                 assert len(pred["keypoints"]) == 1
                 pred["keypoints"] = pred["keypoints"][0][~pts_to_remove[0]][None]
-                pred["keypoint_scores"] = pred["keypoint_scores"][0][~pts_to_remove[0]][
-                    None
-                ]
+                pred["keypoint_scores"] = pred["keypoint_scores"][0][~pts_to_remove[0]][None]
                 pred["descriptors"] = pred["descriptors"][0][~pts_to_remove[0]][None]
 
         # Connect the lines together to form a wireframe
         orig_lines = pred["lines"].clone()
-        if (
-            self.conf.wireframe_params.merge_line_endpoints
-            and len(pred["lines"][0]) > 0
-        ):
+        if self.conf.wireframe_params.merge_line_endpoints and len(pred["lines"][0]) > 0:
             # Merge first close-by endpoints to connect lines
             (
                 line_points,
@@ -243,22 +218,14 @@ class WireframeExtractor(BaseModel):
             # Add the keypoints to the junctions and fill the rest with random keypoints
             (all_points, all_scores, all_descs, pl_associativity) = [], [], [], []
             for bs in range(b_size):
-                all_points.append(
-                    torch.cat([line_points[bs], pred["keypoints"][bs]], dim=0)
-                )
-                all_scores.append(
-                    torch.cat([line_pts_scores[bs], pred["keypoint_scores"][bs]], dim=0)
-                )
-                all_descs.append(
-                    torch.cat([line_descs[bs], pred["descriptors"][bs]], dim=0)
-                )
+                all_points.append(torch.cat([line_points[bs], pred["keypoints"][bs]], dim=0))
+                all_scores.append(torch.cat([line_pts_scores[bs], pred["keypoint_scores"][bs]], dim=0))
+                all_descs.append(torch.cat([line_descs[bs], pred["descriptors"][bs]], dim=0))
 
-                associativity = torch.eye(
-                    len(all_points[-1]), dtype=torch.bool, device=device
-                )
-                associativity[
+                associativity = torch.eye(len(all_points[-1]), dtype=torch.bool, device=device)
+                associativity[: n_true_junctions[bs], : n_true_junctions[bs]] = line_association[bs][
                     : n_true_junctions[bs], : n_true_junctions[bs]
-                ] = line_association[bs][: n_true_junctions[bs], : n_true_junctions[bs]]
+                ]
                 pl_associativity.append(associativity)
 
             all_points = torch.stack(all_points, dim=0)
@@ -267,9 +234,7 @@ class WireframeExtractor(BaseModel):
             pl_associativity = torch.stack(pl_associativity, dim=0)
         else:
             # Lines are independent
-            all_points = torch.cat(
-                [pred["lines"].reshape(b_size, -1, 2), pred["keypoints"]], dim=1
-            )
+            all_points = torch.cat([pred["lines"].reshape(b_size, -1, 2), pred["keypoints"]], dim=1)
             n_pts = all_points.shape[1]
             num_lines = pred["lines"].shape[1]
             n_true_junctions = [num_lines * 2] * b_size
@@ -284,14 +249,8 @@ class WireframeExtractor(BaseModel):
                 pred["lines"].reshape(b_size, -1, 2), pred["dense_descriptors"], s_desc
             ).mT  # [B, n_lines * 2, desc_dim]
             all_descs = torch.cat([line_descs, pred["descriptors"]], dim=1)
-            pl_associativity = torch.eye(n_pts, dtype=torch.bool, device=device)[
-                None
-            ].repeat(b_size, 1, 1)
-            lines_junc_idx = (
-                torch.arange(num_lines * 2, device=device)
-                .reshape(1, -1, 2)
-                .repeat(b_size, 1, 1)
-            )
+            pl_associativity = torch.eye(n_pts, dtype=torch.bool, device=device)[None].repeat(b_size, 1, 1)
+            lines_junc_idx = torch.arange(num_lines * 2, device=device).reshape(1, -1, 2).repeat(b_size, 1, 1)
 
         del pred["dense_descriptors"]  # Remove dense descriptors to save memory
         torch.cuda.empty_cache()

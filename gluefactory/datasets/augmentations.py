@@ -38,9 +38,7 @@ class RandomAdditiveShade(A.ImageOnlyTransform):
             shaded = self._py_additive_shade(img.astype(np.float32))
             shaded = shaded.astype(np.uint8)
         else:
-            raise NotImplementedError(
-                f"Data augmentation not available for type: {img.dtype}"
-            )
+            raise NotImplementedError(f"Data augmentation not available for type: {img.dtype}")
         return shaded
 
     def _py_additive_shade(self, img):
@@ -190,9 +188,7 @@ class DarkAugmentation(BaseAugmentation):
             A.OneOf(
                 [
                     A.Blur(**kwi(blur, p=0.1, blur_limit=(3, 9), n="blur")),
-                    A.MotionBlur(
-                        **kwi(blur, p=0.2, blur_limit=(3, 25), n="motion_blur")
-                    ),
+                    A.MotionBlur(**kwi(blur, p=0.2, blur_limit=(3, 25), n="motion_blur")),
                     A.ISONoise(),
                     A.ImageCompression(),
                 ],
@@ -230,9 +226,7 @@ class LGAugmentation(BaseAugmentation):
             ),
             A.Blur(p=0.1, blur_limit=(3, 9)),
             A.MotionBlur(p=0.1, blur_limit=(3, 25)),
-            A.RandomBrightnessContrast(
-                p=0.5, brightness_limit=(-0.4, 0.0), contrast_limit=(-0.3, 0.0)
-            ),
+            A.RandomBrightnessContrast(p=0.5, brightness_limit=(-0.4, 0.0), contrast_limit=(-0.3, 0.0)),
             A.CLAHE(p=0.2),
         ]
 

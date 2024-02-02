@@ -16,9 +16,7 @@ class KorniaSIFT(BaseModel):
     required_data_keys = ["image"]
 
     def _init(self, conf):
-        self.sift = kornia.feature.SIFTFeature(
-            num_features=self.conf.max_num_keypoints, rootsift=self.conf.rootsift
-        )
+        self.sift = kornia.feature.SIFTFeature(num_features=self.conf.max_num_keypoints, rootsift=self.conf.rootsift)
         self.set_initialized()
 
     def _forward(self, data):

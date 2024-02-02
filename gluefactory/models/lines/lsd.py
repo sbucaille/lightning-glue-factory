@@ -17,9 +17,7 @@ class LSD(BaseModel):
 
     def _init(self, conf):
         if self.conf.force_num_lines:
-            assert (
-                self.conf.max_num_lines is not None
-            ), "Missing max_num_lines parameter"
+            assert self.conf.max_num_lines is not None, "Missing max_num_lines parameter"
 
     def detect_lines(self, img):
         # Run LSD
@@ -44,9 +42,7 @@ class LSD(BaseModel):
         valid_mask = np.ones(n, dtype=bool)
         if self.conf.force_num_lines:
             pad = self.conf.max_num_lines - n
-            segs = np.concatenate(
-                [segs, np.zeros((pad, 2, 2), dtype=np.float32)], axis=0
-            )
+            segs = np.concatenate([segs, np.zeros((pad, 2, 2), dtype=np.float32)], axis=0)
             scores = np.concatenate([scores, np.zeros(pad, dtype=np.float32)], axis=0)
             valid_mask = np.concatenate([valid_mask, np.zeros(pad, dtype=bool)], axis=0)
 
@@ -71,9 +67,7 @@ class LSD(BaseModel):
             valid_lines = [valid_lines]
         else:
             lines, line_scores, valid_lines = zip(
-                *Parallel(n_jobs=self.conf.n_jobs)(
-                    delayed(self.detect_lines)(img) for img in image
-                )
+                *Parallel(n_jobs=self.conf.n_jobs)(delayed(self.detect_lines)(img) for img in image)
             )
 
         # Batch if possible

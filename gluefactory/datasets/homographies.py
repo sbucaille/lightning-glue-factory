@@ -160,13 +160,9 @@ class _Dataset(torch.utils.data.Dataset):
 
         aug_conf = conf.photometric
         aug_name = aug_conf.name
-        assert (
-            aug_name in augmentations.keys()
-        ), f'{aug_name} not in {" ".join(augmentations.keys())}'
+        assert aug_name in augmentations.keys(), f'{aug_name} not in {" ".join(augmentations.keys())}'
         self.photo_augment = augmentations[aug_name](aug_conf)
-        self.left_augment = (
-            IdentityAugmentation() if conf.right_only else self.photo_augment
-        )
+        self.left_augment = IdentityAugmentation() if conf.right_only else self.photo_augment
         self.img_to_tensor = IdentityAugmentation()
 
         if conf.load_features.do:
@@ -176,9 +172,7 @@ class _Dataset(torch.utils.data.Dataset):
         """Transform keypoints by a homography, threshold them,
         and potentially keep only the best ones."""
         # Warp points
-        features["keypoints"] = warp_points(
-            features["keypoints"], data["H_"], inverse=False
-        )
+        features["keypoints"] = warp_points(features["keypoints"], data["H_"], inverse=False)
         h, w = data["image"].shape[1:3]
         valid = (
             (features["keypoints"][:, 0] >= 0)
@@ -200,9 +194,7 @@ class _Dataset(torch.utils.data.Dataset):
             features = {k: v[inds[:n]] for k, v in features.items()}
 
             if self.conf.load_features.force_num_keypoints:
-                features = pad_local_features(
-                    features, self.conf.load_features.max_num_keypoints
-                )
+                features = pad_local_features(features, self.conf.load_features.max_num_keypoints)
 
         return features
 
@@ -292,9 +284,7 @@ def visualize(args):
     with fork_rng(seed=dataset.conf.seed):
         images = []
         for _, data in zip(range(args.num_items), loader):
-            images.append(
-                (data[f"view{i}"]["image"][0].permute(1, 2, 0) for i in range(2))
-            )
+            images.append((data[f"view{i}"]["image"][0].permute(1, 2, 0) for i in range(2)))
     plot_image_grid(images, dpi=args.dpi)
     plt.tight_layout()
     plt.show()

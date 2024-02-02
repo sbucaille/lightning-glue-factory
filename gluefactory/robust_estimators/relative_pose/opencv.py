@@ -16,9 +16,7 @@ class OpenCVRelativePoseEstimator(BaseEstimator):
     required_data_keys = ["m_kpts0", "m_kpts1", "camera0", "camera1"]
 
     def _init(self, conf):
-        self.solver = {"ransac": cv2.RANSAC, "usac_magsac": cv2.USAC_MAGSAC}[
-            self.conf.options.method
-        ]
+        self.solver = {"ransac": cv2.RANSAC, "usac_magsac": cv2.USAC_MAGSAC}[self.conf.options.method]
 
     def _forward(self, data):
         kpts0, kpts1 = data["m_kpts0"], data["m_kpts1"]
@@ -45,15 +43,11 @@ class OpenCVRelativePoseEstimator(BaseEstimator):
             if E is not None:
                 best_num_inliers = 0
                 for _E in np.split(E, len(E) / 3):
-                    n, R, t, _ = cv2.recoverPose(
-                        _E, pts0, pts1, np.eye(3), 1e9, mask=mask
-                    )
+                    n, R, t, _ = cv2.recoverPose(_E, pts0, pts1, np.eye(3), 1e9, mask=mask)
                     if n > best_num_inliers:
                         best_num_inliers = n
                         inl = torch.tensor(mask.ravel() > 0)
-                        M = Pose.from_Rt(
-                            torch.tensor(R).to(kpts0), torch.tensor(t[:, 0]).to(kpts0)
-                        )
+                        M = Pose.from_Rt(torch.tensor(R).to(kpts0), torch.tensor(t[:, 0]).to(kpts0))
 
         estimation = {
             "success": M is not None,

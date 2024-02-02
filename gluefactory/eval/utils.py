@@ -28,9 +28,7 @@ def get_matches_scores(kpts0, kpts1, matches0, mscores0):
 
 def eval_matches_epipolar(data: dict, pred: dict) -> dict:
     check_keys_recursive(data, ["view0", "view1", "T_0to1"])
-    check_keys_recursive(
-        pred, ["keypoints0", "keypoints1", "matches0", "matching_scores0"]
-    )
+    check_keys_recursive(pred, ["keypoints0", "keypoints1", "matches0", "matching_scores0"])
 
     kp0, kp1 = pred["keypoints0"], pred["keypoints1"]
     m0, scores0 = pred["matches0"], pred["matching_scores0"]
@@ -60,9 +58,7 @@ def eval_matches_epipolar(data: dict, pred: dict) -> dict:
 
 def eval_matches_homography(data: dict, pred: dict, conf) -> dict:
     check_keys_recursive(data, ["H_0to1"])
-    check_keys_recursive(
-        pred, ["keypoints0", "keypoints1", "matches0", "matching_scores0"]
-    )
+    check_keys_recursive(pred, ["keypoints0", "keypoints1", "matches0", "matching_scores0"])
 
     H_gt = data["H_0to1"]
     kp0, kp1 = pred["keypoints0"], pred["keypoints1"]
@@ -80,9 +76,7 @@ def eval_matches_homography(data: dict, pred: dict, conf) -> dict:
 
 def eval_relative_pose_robust(data, pred, conf):
     check_keys_recursive(data, ["view0", "view1", "T_0to1"])
-    check_keys_recursive(
-        pred, ["keypoints0", "keypoints1", "matches0", "matching_scores0"]
-    )
+    check_keys_recursive(pred, ["keypoints0", "keypoints1", "matches0", "matching_scores0"])
 
     T_gt = data["T_0to1"][0]
     kp0, kp1 = pred["keypoints0"], pred["keypoints1"]
@@ -135,9 +129,7 @@ def eval_homography_robust(data, pred, conf):
         else:
             lines0 = pred["lines0"]
             lines1 = pred["lines1"]
-        m_lines0, m_lines1, _ = get_matches_scores(
-            lines0, lines1, pred["line_matches0"], pred["line_matching_scores0"]
-        )
+        m_lines0, m_lines1, _ = get_matches_scores(lines0, lines1, pred["line_matches0"], pred["line_matching_scores0"])
         data_["m_lines0"] = m_lines0
         data_["m_lines1"] = m_lines1
 
@@ -167,9 +159,7 @@ def eval_homography_dlt(data, pred, *args):
     pts0, pts1, scores = get_matches_scores(kp0, kp1, m0, scores0)
     results = {}
     try:
-        Hdlt = kornia.geometry.homography.find_homography_dlt(
-            pts0[None], pts1[None], scores[None].to(pts0)
-        )[0]
+        Hdlt = kornia.geometry.homography.find_homography_dlt(pts0[None], pts1[None], scores[None].to(pts0))[0]
     except AssertionError:
         Hdlt = H_inf
 

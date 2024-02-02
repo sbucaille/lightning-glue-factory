@@ -15,9 +15,7 @@ def parse_config_path(name_or_path: Optional[str], defaults: str) -> Path:
     default_configs = {}
     for c in pkg_resources.resource_listdir("gluefactory", str(defaults)):
         if c.endswith(".yaml"):
-            default_configs[Path(c).stem] = Path(
-                pkg_resources.resource_filename("gluefactory", defaults + c)
-            )
+            default_configs[Path(c).stem] = Path(pkg_resources.resource_filename("gluefactory", defaults + c))
     if name_or_path is None:
         return None
     if name_or_path in default_configs:
@@ -50,18 +48,14 @@ def parse_eval_args(benchmark, args, configs_path, default=None):
         conf_path = parse_config_path(args.conf, configs_path)
         custom_conf = OmegaConf.load(conf_path)
         conf = extract_benchmark_conf(OmegaConf.merge(conf, custom_conf), benchmark)
-        args.tag = (
-            args.tag if args.tag is not None else conf_path.name.replace(".yaml", "")
-        )
+        args.tag = args.tag if args.tag is not None else conf_path.name.replace(".yaml", "")
 
     cli_conf = OmegaConf.from_cli(args.dotlist)
     conf = OmegaConf.merge(conf, cli_conf)
     conf.checkpoint = args.checkpoint if args.checkpoint else conf.get("checkpoint")
 
     if conf.checkpoint and not conf.checkpoint.endswith(".tar"):
-        checkpoint_conf = OmegaConf.load(
-            TRAINING_PATH / conf.checkpoint / "config.yaml"
-        )
+        checkpoint_conf = OmegaConf.load(TRAINING_PATH / conf.checkpoint / "config.yaml")
         conf = OmegaConf.merge(extract_benchmark_conf(checkpoint_conf, benchmark), conf)
 
     if default:
@@ -90,10 +84,7 @@ def load_model(model_conf, checkpoint):
     else:
         model = get_model("two_view_pipeline")(model_conf).eval()
     if not model.is_initialized():
-        raise ValueError(
-            "The provided model has non-initialized parameters. "
-            + "Try to load a checkpoint instead."
-        )
+        raise ValueError("The provided model has non-initialized parameters. " + "Try to load a checkpoint instead.")
     return model
 
 

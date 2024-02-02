@@ -130,9 +130,7 @@ class MegaDepth1500Pipeline(EvalPipeline):
                 continue
             summaries[f"m{k}"] = round(np.mean(arr), 3)
 
-        best_pose_results, best_th = eval_poses(
-            pose_results, auc_ths=[5, 10, 20], key="rel_pose_error"
-        )
+        best_pose_results, best_th = eval_poses(pose_results, auc_ths=[5, 10, 20], key="rel_pose_error")
         results = {**results, **pose_results[best_th]}
         summaries = {
             **summaries,

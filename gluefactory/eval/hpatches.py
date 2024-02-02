@@ -136,9 +136,7 @@ class HPatchesPipeline(EvalPipeline):
             summaries[f"m{k}"] = round(np.median(arr), 3)
 
         auc_ths = [1, 3, 5]
-        best_pose_results, best_th = eval_poses(
-            pose_results, auc_ths=auc_ths, key="H_error_ransac", unit="px"
-        )
+        best_pose_results, best_th = eval_poses(pose_results, auc_ths=auc_ths, key="H_error_ransac", unit="px")
         if "H_error_dlt" in results.keys():
             dlt_aucs = AUCMetric(auc_ths, results["H_error_dlt"]).compute()
             for i, ath in enumerate(auc_ths):
@@ -187,9 +185,7 @@ if __name__ == "__main__":
     experiment_dir.mkdir(exist_ok=True)
 
     pipeline = HPatchesPipeline(conf)
-    s, f, r = pipeline.run(
-        experiment_dir, overwrite=args.overwrite, overwrite_eval=args.overwrite_eval
-    )
+    s, f, r = pipeline.run(experiment_dir, overwrite=args.overwrite, overwrite_eval=args.overwrite_eval)
 
     # print results
     pprint(s)

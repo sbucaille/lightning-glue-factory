@@ -44,9 +44,7 @@ class PycolmapTwoViewEstimator(BaseEstimator):
             "success": success,
             "M_0to1": M,
             "inliers": inl,
-            "type": str(
-                info.get("configuration_type", pycolmap.TwoViewGeometry.UNDEFINED)
-            ),
+            "type": str(info.get("configuration_type", pycolmap.TwoViewGeometry.UNDEFINED)),
         }
 
         return estimation

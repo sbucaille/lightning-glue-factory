@@ -25,9 +25,7 @@ def make_match_figures(pred_, data_, n_pairs=2):
     for i in range(n_pairs):
         valid = (m0[i] > -1) & (gtm0[i] >= -1)
         kpm0, kpm1 = kp0[i][valid].numpy(), kp1[i][m0[i][valid]].numpy()
-        images.append(
-            [view0["image"][i].permute(1, 2, 0), view1["image"][i].permute(1, 2, 0)]
-        )
+        images.append([view0["image"][i].permute(1, 2, 0), view1["image"][i].permute(1, 2, 0)])
         kpts.append([kp0[i], kp1[i]])
         matches.append((kpm0, kpm1))
 
@@ -49,9 +47,6 @@ def make_match_figures(pred_, data_, n_pairs=2):
     if len(heatmaps) > 0:
         [plot_heatmaps(heatmaps[i], axes=axes[i], a=1.0) for i in range(n_pairs)]
     [plot_keypoints(kpts[i], axes=axes[i], colors="royalblue") for i in range(n_pairs)]
-    [
-        plot_matches(*matches[i], color=mcolors[i], axes=axes[i], a=0.5, lw=1.0, ps=0.0)
-        for i in range(n_pairs)
-    ]
+    [plot_matches(*matches[i], color=mcolors[i], axes=axes[i], a=0.5, lw=1.0, ps=0.0) for i in range(n_pairs)]
 
     return {"matching": fig}

@@ -120,10 +120,7 @@ class MultiHeadedAttention(nn.Module):
 
     def forward(self, query, key, value):
         b = query.size(0)
-        query, key, value = [
-            layer(x).view(b, self.dim, self.h, -1)
-            for layer, x in zip(self.proj, (query, key, value))
-        ]
+        query, key, value = [layer(x).view(b, self.dim, self.h, -1) for layer, x in zip(self.proj, (query, key, value))]
         x, _ = attention(query, key, value)
         return self.merge(x.contiguous().view(b, self.dim * self.h, -1))
 
@@ -143,18 +140,14 @@ class AttentionalPropagation(nn.Module):
 class AttentionalGNN(nn.Module):
     def __init__(self, feature_dim, layer_names):
         super().__init__()
-        self.layers = nn.ModuleList(
-            [AttentionalPropagation(feature_dim, 4) for _ in range(len(layer_names))]
-        )
+        self.layers = nn.ModuleList([AttentionalPropagation(feature_dim, 4) for _ in range(len(layer_names))])
         self.names = layer_names
 
     def forward(self, desc0, desc1):
         for i, (layer, name) in enumerate(zip(self.layers, self.names)):
             layer.attn.prob = []
             if self.training:
-                delta0, delta1 = checkpoint(
-                    self._forward, layer, desc0, desc1, name, preserve_rng_state=False
-                )
+                delta0, delta1 = checkpoint(self._forward, layer, desc0, desc1, name, preserve_rng_state=False)
             else:
                 delta0, delta1 = self._forward(layer, desc0, desc1, name)
             desc0, desc1 = (desc0 + delta0), (desc1 + delta1)
@@ -187,9 +180,7 @@ def log_optimal_transport(scores, alpha, iters):
     bins1 = alpha.expand(b, 1, n)
     alpha = alpha.expand(b, 1, 1)
 
-    couplings = torch.cat(
-        [torch.cat([scores, bins0], -1), torch.cat([bins1, alpha], -1)], 1
-    )
+    couplings = torch.cat([torch.cat([scores, bins0], -1), torch.cat([bins1, alpha], -1)], 1)
 
     norm = -(ms + ns).log()
     log_mu = torch.cat([norm.expand(m), ns.log()[None] + norm])
@@ -229,18 +220,16 @@ class SuperGlue(BaseModel):
         "keypoint_scores1",
     ]
 
-    checkpoint_url = "https://github.com/magicleap/SuperGluePretrainedNetwork/raw/master/models/weights/superglue_{}.pth"  # noqa: E501
+    checkpoint_url = (
+        "https://github.com/magicleap/SuperGluePretrainedNetwork/raw/master/models/weights/superglue_{}.pth"  # noqa: E501
+    )
 
     def _init(self, conf):
-        self.kenc = KeypointEncoder(
-            conf.descriptor_dim, conf.keypoint_encoder, conf.use_scores
-        )
+        self.kenc = KeypointEncoder(conf.descriptor_dim, conf.keypoint_encoder, conf.use_scores)
 
         self.gnn = AttentionalGNN(conf.descriptor_dim, conf.GNN_layers)
 
-        self.final_proj = nn.Conv1d(
-            conf.descriptor_dim, conf.descriptor_dim, kernel_size=1, bias=True
-        )
+        self.final_proj = nn.Conv1d(conf.descriptor_dim, conf.descriptor_dim, kernel_size=1, bias=True)
         bin_score = torch.nn.Parameter(torch.tensor(1.0))
         self.register_parameter("bin_score", bin_score)
 
@@ -263,12 +252,8 @@ class SuperGlue(BaseModel):
                 "matching_scores1": kpts1.new_zeros(shape1),
             }
         view0, view1 = data["view0"], data["view1"]
-        kpts0 = normalize_keypoints(
-            kpts0, size=view0.get("image_size"), shape=view0["image"].shape
-        )
-        kpts1 = normalize_keypoints(
-            kpts1, size=view1.get("image_size"), shape=view1["image"].shape
-        )
+        kpts0 = normalize_keypoints(kpts0, size=view0.get("image_size"), shape=view0["image"].shape)
+        kpts1 = normalize_keypoints(kpts1, size=view1.get("image_size"), shape=view1["image"].shape)
         assert torch.all(kpts0 >= -1) and torch.all(kpts0 <= 1)
         assert torch.all(kpts1 >= -1) and torch.all(kpts1 <= 1)
         desc0 = desc0 + self.kenc(kpts0, data["keypoint_scores0"])
@@ -281,9 +266,7 @@ class SuperGlue(BaseModel):
         scores = torch.einsum("bdn,bdm->bnm", mdesc0, mdesc1)
         cost = scores / self.conf.descriptor_dim**0.5
 
-        scores = log_optimal_transport(
-            cost, self.bin_score, iters=self.conf.num_sinkhorn_iterations
-        )
+        scores = log_optimal_transport(cost, self.bin_score, iters=self.conf.num_sinkhorn_iterations)
 
         max0, max1 = scores[:, :-1, :-1].max(2), scores[:, :-1, :-1].max(1)
         m0, m1 = max0.indices, max1.indices
@@ -321,10 +304,7 @@ class SuperGlue(BaseModel):
         nll_neg0 = -(log_assignment[:, :-1, -1] * neg0).sum(1)
         nll_neg1 = -(log_assignment[:, -1, :-1] * neg1).sum(1)
         nll_neg = (nll_neg0 + nll_neg1) / num_neg
-        nll = (
-            self.conf.loss.nll_balancing * nll_pos
-            + (1 - self.conf.loss.nll_balancing) * nll_neg
-        )
+        nll = self.conf.loss.nll_balancing * nll_pos + (1 - self.conf.loss.nll_balancing) * nll_neg
         losses["assignment_nll"] = nll
         losses["total"] = nll
 

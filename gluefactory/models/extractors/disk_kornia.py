@@ -58,9 +58,7 @@ class DISK(BaseModel):
         chunk = self.conf.chunk
         for i in range(0, image.shape[0], chunk):
             if self.conf.dense_outputs:
-                features, d_descriptors = self._get_dense_outputs(
-                    image[: min(image.shape[0], i + chunk)]
-                )
+                features, d_descriptors = self._get_dense_outputs(image[: min(image.shape[0], i + chunk)])
                 dense_descriptors.append(d_descriptors)
             else:
                 features = self.model(

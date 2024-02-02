@@ -30,11 +30,7 @@ def save_eval(dir, summaries, figures, results):
         # just to be safe, not used in practice
         for k, v in summaries.items():
             hfile.attrs[k] = v
-    s = {
-        k: float(v) if np.isfinite(v) else None
-        for k, v in summaries.items()
-        if not isinstance(v, list)
-    }
+    s = {k: float(v) if np.isfinite(v) else None for k, v in summaries.items() if not isinstance(v, list)}
     s = {**s, **{k: v for k, v in summaries.items() if isinstance(v, list)}}
     with open(dir / "summaries.json", "w") as f:
         json.dump(s, f, indent=4)
@@ -77,12 +73,8 @@ class EvalPipeline:
 
     def run(self, experiment_dir, model=None, overwrite=False, overwrite_eval=False):
         """Run export+eval loop"""
-        self.save_conf(
-            experiment_dir, overwrite=overwrite, overwrite_eval=overwrite_eval
-        )
-        pred_file = self.get_predictions(
-            experiment_dir, model=model, overwrite=overwrite
-        )
+        self.save_conf(experiment_dir, overwrite=overwrite, overwrite_eval=overwrite_eval)
+        pred_file = self.get_predictions(experiment_dir, model=model, overwrite=overwrite)
 
         f = {}
         if not exists_eval(experiment_dir) or overwrite_eval or overwrite:
@@ -96,14 +88,8 @@ class EvalPipeline:
         conf_output_path = experiment_dir / "conf.yaml"
         if conf_output_path.exists():
             saved_conf = OmegaConf.load(conf_output_path)
-            if (saved_conf.data != self.conf.data) or (
-                saved_conf.model != self.conf.model
-            ):
-                assert (
-                    overwrite
-                ), "configs changed, add --overwrite to rerun experiment with new conf"
+            if (saved_conf.data != self.conf.data) or (saved_conf.model != self.conf.model):
+                assert overwrite, "configs changed, add --overwrite to rerun experiment with new conf"
             if saved_conf.eval != self.conf.eval:
-                assert (
-                    overwrite or overwrite_eval
-                ), "eval configs changed, add --overwrite_eval to rerun evaluation"
+                assert overwrite or overwrite_eval, "eval configs changed, add --overwrite_eval to rerun evaluation"
         OmegaConf.save(self.conf, experiment_dir / "conf.yaml")

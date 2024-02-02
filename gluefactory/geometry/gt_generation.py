@@ -11,15 +11,11 @@ UNMATCHED_FEATURE = -1
 
 
 @torch.no_grad()
-def gt_matches_from_pose_depth(
-    kp0, kp1, data, pos_th=3, neg_th=5, epi_th=None, cc_th=None, **kw
-):
+def gt_matches_from_pose_depth(kp0, kp1, data, pos_th=3, neg_th=5, epi_th=None, cc_th=None, **kw):
     if kp0.shape[1] == 0 or kp1.shape[1] == 0:
         b_size, n_kp0 = kp0.shape[:2]
         n_kp1 = kp1.shape[1]
-        assignment = torch.zeros(
-            b_size, n_kp0, n_kp1, dtype=torch.bool, device=kp0.device
-        )
+        assignment = torch.zeros(b_size, n_kp0, n_kp1, dtype=torch.bool, device=kp0.device)
         m0 = -torch.ones_like(kp0[:, :, 0]).long()
         m1 = -torch.ones_like(kp1[:, :, 0]).long()
         return assignment, m0, m1
@@ -37,12 +33,8 @@ def gt_matches_from_pose_depth(
         d0, valid0 = sample_depth(kp0, depth0)
         d1, valid1 = sample_depth(kp1, depth1)
 
-    kp0_1, visible0 = project(
-        kp0, d0, depth1, camera0, camera1, T_0to1, valid0, ccth=cc_th
-    )
-    kp1_0, visible1 = project(
-        kp1, d1, depth0, camera1, camera0, T_1to0, valid1, ccth=cc_th
-    )
+    kp0_1, visible0 = project(kp0, d0, depth1, camera0, camera1, T_0to1, valid0, ccth=cc_th)
+    kp1_0, visible1 = project(kp1, d1, depth0, camera1, camera0, T_1to0, valid1, ccth=cc_th)
     mask_visible = visible0.unsqueeze(-1) & visible1.unsqueeze(-2)
 
     # build a distance matrix of size [... x M x N]
@@ -111,9 +103,7 @@ def gt_matches_from_homography(kp0, kp1, H, pos_th=3, neg_th=6, **kw):
     if kp0.shape[1] == 0 or kp1.shape[1] == 0:
         b_size, n_kp0 = kp0.shape[:2]
         n_kp1 = kp1.shape[1]
-        assignment = torch.zeros(
-            b_size, n_kp0, n_kp1, dtype=torch.bool, device=kp0.device
-        )
+        assignment = torch.zeros(b_size, n_kp0, n_kp1, dtype=torch.bool, device=kp0.device)
         m0 = -torch.ones_like(kp0[:, :, 0]).long()
         m1 = -torch.ones_like(kp1[:, :, 0]).long()
         return assignment, m0, m1
@@ -163,9 +153,9 @@ def gt_matches_from_homography(kp0, kp1, H, pos_th=3, neg_th=6, **kw):
 
 def sample_pts(lines, npts):
     dir_vec = (lines[..., 2:4] - lines[..., :2]) / (npts - 1)
-    pts = lines[..., :2, np.newaxis] + dir_vec[..., np.newaxis].expand(
-        dir_vec.shape + (npts,)
-    ) * torch.arange(npts).to(lines)
+    pts = lines[..., :2, np.newaxis] + dir_vec[..., np.newaxis].expand(dir_vec.shape + (npts,)) * torch.arange(npts).to(
+        lines
+    )
     pts = torch.transpose(pts, -1, -2)
     return pts
 
@@ -197,9 +187,7 @@ def torch_perp_dist(segs2d, points_2d):
     #    -> [batch, nsegs0, nsegs1, n_sampled_pts, 2]
     rotated = torch.einsum("bdji,bdepi->bdepj", R, centered)
 
-    overlaping = (rotated[..., 0] <= 0) & (
-        torch.abs(rotated[..., 0]) <= sizes[..., None, None]
-    )
+    overlaping = (rotated[..., 0] <= 0) & (torch.abs(rotated[..., 0]) <= sizes[..., None, None])
 
     return torch.abs(rotated[..., 1]), overlaping
 
@@ -230,9 +218,7 @@ def gt_line_matches_from_pose_depth(
             pred_lines0.shape[1],
             pred_lines1.shape[1],
         )
-        positive = torch.zeros(
-            (bsize, nlines0, nlines1), dtype=torch.bool, device=pred_lines0.device
-        )
+        positive = torch.zeros((bsize, nlines0, nlines1), dtype=torch.bool, device=pred_lines0.device)
         m0 = torch.full((bsize, nlines0), -1, device=pred_lines0.device)
         m1 = torch.full((bsize, nlines1), -1, device=pred_lines0.device)
         return positive, m0, m1
@@ -290,14 +276,10 @@ def gt_line_matches_from_pose_depth(
     h0, w0 = data["view0"]["image"].shape[-2:]
     h1, w1 = data["view1"]["image"].shape[-2:]
     # If a line has less than min_visibility_th inside the image is considered OUTSIDE
-    pts_out_of0 = (pts1_0 < 0).any(-1) | (
-        pts1_0 >= torch.tensor([w0, h0]).to(pts1_0)
-    ).any(-1)
+    pts_out_of0 = (pts1_0 < 0).any(-1) | (pts1_0 >= torch.tensor([w0, h0]).to(pts1_0)).any(-1)
     pts_out_of0 = pts_out_of0.reshape(b_size, n_lines1, npts).float()
     out_of0 = pts_out_of0.mean(dim=-1) >= (1 - min_visibility_th)
-    pts_out_of1 = (pts0_1 < 0).any(-1) | (
-        pts0_1 >= torch.tensor([w1, h1]).to(pts0_1)
-    ).any(-1)
+    pts_out_of1 = (pts0_1 < 0).any(-1) | (pts0_1 >= torch.tensor([w1, h1]).to(pts0_1)).any(-1)
     pts_out_of1 = pts_out_of1.reshape(b_size, n_lines0, npts).float()
     out_of1 = pts_out_of1.mean(dim=-1) >= (1 - min_visibility_th)
 
@@ -327,13 +309,8 @@ def gt_line_matches_from_pose_depth(
     num_close_pts1_t = num_close_pts1.transpose(-1, -2)  # [bs, nl1, nl0]
     num_close_pts = num_close_pts0 * num_close_pts1_t
     mask_close = (
-        num_close_pts1_t
-        > visible0.reshape(b_size, n_lines0, npts).float().sum(-1)[:, :, None]
-        * overlap_th
-    ) & (
-        num_close_pts0
-        > visible1.reshape(b_size, n_lines1, npts).float().sum(-1)[:, None] * overlap_th
-    )
+        num_close_pts1_t > visible0.reshape(b_size, n_lines0, npts).float().sum(-1)[:, :, None] * overlap_th
+    ) & (num_close_pts0 > visible1.reshape(b_size, n_lines1, npts).float().sum(-1)[:, None] * overlap_th)
     # mask_close = (num_close_pts1_t > npts * overlap_th) & (
     # num_close_pts0 > npts * overlap_th)
 
@@ -342,14 +319,8 @@ def gt_line_matches_from_pose_depth(
     unmatched1 = torch.all(~mask_close, dim=1) | out_of0
 
     # Define the lines to ignore
-    ignore0 = (
-        valid0_pts0.reshape(b_size, n_lines0, npts).float().mean(dim=-1)
-        < min_visibility_th
-    ) | ~valid_lines0
-    ignore1 = (
-        valid1_pts1.reshape(b_size, n_lines1, npts).float().mean(dim=-1)
-        < min_visibility_th
-    ) | ~valid_lines1
+    ignore0 = (valid0_pts0.reshape(b_size, n_lines0, npts).float().mean(dim=-1) < min_visibility_th) | ~valid_lines0
+    ignore1 = (valid1_pts1.reshape(b_size, n_lines1, npts).float().mean(dim=-1) < min_visibility_th) | ~valid_lines1
 
     cost = -num_close_pts.clone()
     # High score for unmatched and non-valid lines
@@ -363,21 +334,15 @@ def gt_line_matches_from_pose_depth(
     cost = cost.transpose(1, 2)
 
     # For each row, returns the col of max number of points
-    assignation = np.array(
-        [linear_sum_assignment(C) for C in cost.detach().cpu().numpy()]
-    )
+    assignation = np.array([linear_sum_assignment(C) for C in cost.detach().cpu().numpy()])
     assignation = torch.tensor(assignation).to(num_close_pts)
     # Set ignore and unmatched labels
     unmatched = assignation.new_tensor(UNMATCHED_FEATURE)
     ignore = assignation.new_tensor(IGNORE_FEATURE)
 
     positive = num_close_pts.new_zeros(num_close_pts.shape, dtype=torch.bool)
-    all_in_batch = (
-        torch.arange(b_size)[:, None].repeat(1, assignation.shape[-1]).flatten()
-    )
-    positive[
-        all_in_batch, assignation[:, 0].flatten(), assignation[:, 1].flatten()
-    ] = True
+    all_in_batch = torch.arange(b_size)[:, None].repeat(1, assignation.shape[-1]).flatten()
+    positive[all_in_batch, assignation[:, 0].flatten(), assignation[:, 1].flatten()] = True
 
     m0 = assignation.new_full((b_size, n_lines0), unmatched, dtype=torch.long)
     m0.scatter_(-1, assignation[:, 0], assignation[:, 1])
@@ -458,14 +423,10 @@ def gt_line_matches_from_homography(
     pts1_0 = pts1_0.reshape(b_size, n_lines1, npts, 2)
 
     # If a line has less than min_visibility_th inside the image is considered OUTSIDE
-    pts_out_of0 = (pts1_0 < 0).any(-1) | (
-        pts1_0 >= torch.tensor([w0, h0]).to(pts1_0)
-    ).any(-1)
+    pts_out_of0 = (pts1_0 < 0).any(-1) | (pts1_0 >= torch.tensor([w0, h0]).to(pts1_0)).any(-1)
     pts_out_of0 = pts_out_of0.reshape(b_size, n_lines1, npts).float()
     out_of0 = pts_out_of0.mean(dim=-1) >= (1 - min_visibility_th)
-    pts_out_of1 = (pts0_1 < 0).any(-1) | (
-        pts0_1 >= torch.tensor([w1, h1]).to(pts0_1)
-    ).any(-1)
+    pts_out_of1 = (pts0_1 < 0).any(-1) | (pts0_1 >= torch.tensor([w1, h1]).to(pts0_1)).any(-1)
     pts_out_of1 = pts_out_of1.reshape(b_size, n_lines0, npts).float()
     out_of1 = pts_out_of1.mean(dim=-1) >= (1 - min_visibility_th)
 
@@ -512,9 +473,7 @@ def gt_line_matches_from_homography(
     cost[ignore1] = 1e6
     cost = cost.transpose(1, 2)
     # For each row, returns the col of max number of points
-    assignation = np.array(
-        [linear_sum_assignment(C) for C in cost.detach().cpu().numpy()]
-    )
+    assignation = np.array([linear_sum_assignment(C) for C in cost.detach().cpu().numpy()])
     assignation = torch.tensor(assignation).to(num_close_pts)
 
     # Set unmatched labels

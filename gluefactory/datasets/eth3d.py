@@ -102,9 +102,7 @@ class ETH3DDataset(BaseDataset):
                 1 / self.downsize_factor,
             )
             name_to_cam_idx = {name: {} for name in names}
-            with open(
-                str(Path(folder, "dslr_calibration_jpg", "images.txt")), "r"
-            ) as f:
+            with open(str(Path(folder, "dslr_calibration_jpg", "images.txt")), "r") as f:
                 raw_data = f.read().rstrip().split("\n")[4::2]
             for raw_line in raw_data:
                 line = raw_line.split(" ")
@@ -112,9 +110,7 @@ class ETH3DDataset(BaseDataset):
                 name_to_cam_idx[img_name]["dist_camera_idx"] = int(line[-2])
             T_world_to_camera = {}
             image_visible_points3D = {}
-            with open(
-                str(Path(folder, "dslr_calibration_undistorted", "images.txt")), "r"
-            ) as f:
+            with open(str(Path(folder, "dslr_calibration_undistorted", "images.txt")), "r") as f:
                 lines = f.readlines()[4:]  # Skip the header
                 raw_poses = [line.strip("\n").split(" ") for line in lines[::2]]
                 raw_points = [line.strip("\n").split(" ") for line in lines[1::2]]
@@ -138,9 +134,7 @@ class ETH3DDataset(BaseDataset):
                 for j in range(i + 1, num_imgs):
                     visible_points3D1 = image_visible_points3D[names[i]]
                     visible_points3D2 = image_visible_points3D[names[j]]
-                    n_covisible_points[i, j] = len(
-                        visible_points3D1 & visible_points3D2
-                    )
+                    n_covisible_points[i, j] = len(visible_points3D1 & visible_points3D2)
 
             # Keep only the pairs with enough covisibility
             valid_pairs = np.where(n_covisible_points >= conf.min_covisibility)
@@ -151,32 +145,24 @@ class ETH3DDataset(BaseDataset):
                     "view0": {
                         "name": names[i][:-4],
                         "img_path": str(Path(img_folder, names[i])),
-                        "depth_path": str(Path(depth_folder, names[i][:-4]))
-                        + depth_ext,
+                        "depth_path": str(Path(depth_folder, names[i][:-4])) + depth_ext,
                         "camera": cameras[name_to_cam_idx[names[i]]["dist_camera_idx"]],
                         "T_w2cam": Pose.from_4x4mat(T_world_to_camera[names[i]]),
                     },
                     "view1": {
                         "name": names[j][:-4],
                         "img_path": str(Path(img_folder, names[j])),
-                        "depth_path": str(Path(depth_folder, names[j][:-4]))
-                        + depth_ext,
+                        "depth_path": str(Path(depth_folder, names[j][:-4])) + depth_ext,
                         "camera": cameras[name_to_cam_idx[names[j]]["dist_camera_idx"]],
                         "T_w2cam": Pose.from_4x4mat(T_world_to_camera[names[j]]),
                     },
                     "T_world_to_ref": Pose.from_4x4mat(T_world_to_camera[names[i]]),
                     "T_world_to_target": Pose.from_4x4mat(T_world_to_camera[names[j]]),
                     "T_0to1": Pose.from_4x4mat(
-                        np.float32(
-                            T_world_to_camera[names[j]]
-                            @ np.linalg.inv(T_world_to_camera[names[i]])
-                        )
+                        np.float32(T_world_to_camera[names[j]] @ np.linalg.inv(T_world_to_camera[names[i]]))
                     ),
                     "T_1to0": Pose.from_4x4mat(
-                        np.float32(
-                            T_world_to_camera[names[i]]
-                            @ np.linalg.inv(T_world_to_camera[names[j]])
-                        )
+                        np.float32(T_world_to_camera[names[i]] @ np.linalg.inv(T_world_to_camera[names[j]]))
                     ),
                     "n_covisible_points": n_covisible_points[i, j],
                 }
@@ -209,17 +195,12 @@ class ETH3DDataset(BaseDataset):
         img = load_image(img_path, grayscale=self.grayscale)
         shape = img.shape[-2:]
         # instead of INTER_AREA this does bilinear interpolation with antialiasing
-        img_data = ImagePreprocessor({"resize": max(shape) // self.downsize_factor})(
-            img
-        )
+        img_data = ImagePreprocessor({"resize": max(shape) // self.downsize_factor})(img)
         return img_data
 
     def read_depth(self, depth_path):
         if self.downsize_factor != 8:
-            raise ValueError(
-                "Undistorted depth only available for low res"
-                + " images(downsize_factor = 8)."
-            )
+            raise ValueError("Undistorted depth only available for low res" + " images(downsize_factor = 8).")
         depth_img = cv2.imread(depth_path, cv2.IMREAD_ANYDEPTH)
         depth_img = depth_img.astype(np.float32) / 256
 

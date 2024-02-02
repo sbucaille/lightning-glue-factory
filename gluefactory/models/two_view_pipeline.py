@@ -55,9 +55,7 @@ class TwoViewPipeline(BaseModel):
             self.solver = get_model(conf.solver.name)(to_ctr(conf.solver))
 
         if conf.ground_truth.name:
-            self.ground_truth = get_model(conf.ground_truth.name)(
-                to_ctr(conf.ground_truth)
-            )
+            self.ground_truth = get_model(conf.ground_truth.name)(to_ctr(conf.ground_truth))
 
     def extract_view(self, data, i):
         data_i = data[f"view{i}"]

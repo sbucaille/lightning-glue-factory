@@ -54,16 +54,11 @@ class GlueStick(BaseModel):
 
     DEFAULT_LOSS_CONF = {"nll_weight": 1.0, "nll_balancing": 0.5}
 
-    url = (
-        "https://github.com/cvg/GlueStick/releases/download/{}/"
-        "checkpoint_GlueStick_MD.tar"
-    )
+    url = "https://github.com/cvg/GlueStick/releases/download/{}/" "checkpoint_GlueStick_MD.tar"
 
     def _init(self, conf):
         if conf.input_dim != conf.descriptor_dim:
-            self.input_proj = nn.Conv1d(
-                conf.input_dim, conf.descriptor_dim, kernel_size=1
-            )
+            self.input_proj = nn.Conv1d(conf.input_dim, conf.descriptor_dim, kernel_size=1)
             nn.init.constant_(self.input_proj.bias, 0.0)
 
         self.kenc = KeypointEncoder(conf.descriptor_dim, conf.keypoint_encoder)
@@ -76,22 +71,15 @@ class GlueStick(BaseModel):
             num_line_iterations=conf.num_line_iterations,
             line_attention=conf.line_attention,
         )
-        self.final_proj = nn.Conv1d(
-            conf.descriptor_dim, conf.descriptor_dim, kernel_size=1
-        )
+        self.final_proj = nn.Conv1d(conf.descriptor_dim, conf.descriptor_dim, kernel_size=1)
         nn.init.constant_(self.final_proj.bias, 0.0)
         nn.init.orthogonal_(self.final_proj.weight, gain=1)
-        self.final_line_proj = nn.Conv1d(
-            conf.descriptor_dim, conf.descriptor_dim, kernel_size=1
-        )
+        self.final_line_proj = nn.Conv1d(conf.descriptor_dim, conf.descriptor_dim, kernel_size=1)
         nn.init.constant_(self.final_line_proj.bias, 0.0)
         nn.init.orthogonal_(self.final_line_proj.weight, gain=1)
         if conf.inter_supervision is not None:
             self.inter_line_proj = nn.ModuleList(
-                [
-                    nn.Conv1d(conf.descriptor_dim, conf.descriptor_dim, kernel_size=1)
-                    for _ in conf.inter_supervision
-                ]
+                [nn.Conv1d(conf.descriptor_dim, conf.descriptor_dim, kernel_size=1) for _ in conf.inter_supervision]
             )
             self.layer2idx = {}
             for i, l in enumerate(conf.inter_supervision):
@@ -115,37 +103,19 @@ class GlueStick(BaseModel):
                 logging.info(f'Loading GlueStick model from "{fname}"')
                 state_dict = torch.load(fname, map_location="cpu")
             else:
-                logging.info(
-                    "Loading GlueStick model from " f'"{self.url.format(conf.version)}"'
-                )
-                state_dict = torch.hub.load_state_dict_from_url(
-                    self.url.format(conf.version), file_name=fname
-                )
+                logging.info("Loading GlueStick model from " f'"{self.url.format(conf.version)}"')
+                state_dict = torch.hub.load_state_dict_from_url(self.url.format(conf.version), file_name=fname)
 
             if "model" in state_dict:
-                state_dict = {
-                    k.replace("matcher.", ""): v
-                    for k, v in state_dict["model"].items()
-                    if "matcher." in k
-                }
-                state_dict = {
-                    k.replace("module.", ""): v for k, v in state_dict.items()
-                }
+                state_dict = {k.replace("matcher.", ""): v for k, v in state_dict["model"].items() if "matcher." in k}
+                state_dict = {k.replace("module.", ""): v for k, v in state_dict.items()}
             self.load_state_dict(state_dict)
 
     def _forward(self, data):
         device = data["keypoints0"].device
         b_size = len(data["keypoints0"])
-        image_size0 = (
-            data["view0"]["image_size"]
-            if "image_size" in data["view0"]
-            else data["view0"]["image"].shape
-        )
-        image_size1 = (
-            data["view1"]["image_size"]
-            if "image_size" in data["view1"]
-            else data["view1"]["image"].shape
-        )
+        image_size0 = data["view0"]["image_size"] if "image_size" in data["view0"] else data["view0"]["image"].shape
+        image_size1 = data["view1"]["image_size"] if "image_size" in data["view1"] else data["view1"]["image"].shape
 
         pred = {}
         desc0, desc1 = data["descriptors0"].mT, data["descriptors1"].mT
@@ -155,36 +125,16 @@ class GlueStick(BaseModel):
         n_lines0, n_lines1 = data["lines0"].shape[1], data["lines1"].shape[1]
         if n_kpts0 == 0 or n_kpts1 == 0:
             # No detected keypoints nor lines
-            pred["log_assignment"] = torch.zeros(
-                b_size, n_kpts0, n_kpts1, dtype=torch.float, device=device
-            )
-            pred["matches0"] = torch.full(
-                (b_size, n_kpts0), -1, device=device, dtype=torch.int64
-            )
-            pred["matches1"] = torch.full(
-                (b_size, n_kpts1), -1, device=device, dtype=torch.int64
-            )
-            pred["matching_scores0"] = torch.zeros(
-                (b_size, n_kpts0), device=device, dtype=torch.float32
-            )
-            pred["matching_scores1"] = torch.zeros(
-                (b_size, n_kpts1), device=device, dtype=torch.float32
-            )
-            pred["line_log_assignment"] = torch.zeros(
-                b_size, n_lines0, n_lines1, dtype=torch.float, device=device
-            )
-            pred["line_matches0"] = torch.full(
-                (b_size, n_lines0), -1, device=device, dtype=torch.int64
-            )
-            pred["line_matches1"] = torch.full(
-                (b_size, n_lines1), -1, device=device, dtype=torch.int64
-            )
-            pred["line_matching_scores0"] = torch.zeros(
-                (b_size, n_lines0), device=device, dtype=torch.float32
-            )
-            pred["line_matching_scores1"] = torch.zeros(
-                (b_size, n_kpts1), device=device, dtype=torch.float32
-            )
+            pred["log_assignment"] = torch.zeros(b_size, n_kpts0, n_kpts1, dtype=torch.float, device=device)
+            pred["matches0"] = torch.full((b_size, n_kpts0), -1, device=device, dtype=torch.int64)
+            pred["matches1"] = torch.full((b_size, n_kpts1), -1, device=device, dtype=torch.int64)
+            pred["matching_scores0"] = torch.zeros((b_size, n_kpts0), device=device, dtype=torch.float32)
+            pred["matching_scores1"] = torch.zeros((b_size, n_kpts1), device=device, dtype=torch.float32)
+            pred["line_log_assignment"] = torch.zeros(b_size, n_lines0, n_lines1, dtype=torch.float, device=device)
+            pred["line_matches0"] = torch.full((b_size, n_lines0), -1, device=device, dtype=torch.int64)
+            pred["line_matches1"] = torch.full((b_size, n_lines1), -1, device=device, dtype=torch.int64)
+            pred["line_matching_scores0"] = torch.zeros((b_size, n_lines0), device=device, dtype=torch.float32)
+            pred["line_matching_scores1"] = torch.zeros((b_size, n_kpts1), device=device, dtype=torch.float32)
             return pred
 
         lines0 = data["lines0"].flatten(1, 2)
@@ -207,12 +157,8 @@ class GlueStick(BaseModel):
 
         if n_lines0 != 0 and n_lines1 != 0:
             # Pre-compute the line encodings
-            lines0 = normalize_keypoints(lines0, image_size0).reshape(
-                b_size, n_lines0, 2, 2
-            )
-            lines1 = normalize_keypoints(lines1, image_size1).reshape(
-                b_size, n_lines1, 2, 2
-            )
+            lines0 = normalize_keypoints(lines0, image_size0).reshape(b_size, n_lines0, 2, 2)
+            lines1 = normalize_keypoints(lines1, image_size1).reshape(b_size, n_lines1, 2, 2)
             line_enc0 = self.lenc(lines0, data["line_scores0"])
             line_enc1 = self.lenc(lines1, data["line_scores1"])
         else:
@@ -231,9 +177,7 @@ class GlueStick(BaseModel):
                 device=device,
             )
 
-        desc0, desc1 = self.gnn(
-            desc0, desc1, line_enc0, line_enc1, lines_junc_idx0, lines_junc_idx1
-        )
+        desc0, desc1 = self.gnn(desc0, desc1, line_enc0, line_enc1, lines_junc_idx0, lines_junc_idx1)
 
         # Match all points (KP and line junctions)
         mdesc0, mdesc1 = self.final_proj(desc0), self.final_proj(desc1)
@@ -286,24 +230,12 @@ class GlueStick(BaseModel):
                     pred[f"line_{layer}_matching_scores0"] = mscores0_lines_i
                     pred[f"line_{layer}_matching_scores1"] = mscores1_lines_i
         else:
-            line_scores = torch.zeros(
-                b_size, n_lines0, n_lines1, dtype=torch.float, device=device
-            )
-            m0_lines = torch.full(
-                (b_size, n_lines0), -1, device=device, dtype=torch.int64
-            )
-            m1_lines = torch.full(
-                (b_size, n_lines1), -1, device=device, dtype=torch.int64
-            )
-            mscores0_lines = torch.zeros(
-                (b_size, n_lines0), device=device, dtype=torch.float32
-            )
-            mscores1_lines = torch.zeros(
-                (b_size, n_lines1), device=device, dtype=torch.float32
-            )
-            raw_line_scores = torch.zeros(
-                b_size, n_lines0, n_lines1, dtype=torch.float, device=device
-            )
+            line_scores = torch.zeros(b_size, n_lines0, n_lines1, dtype=torch.float, device=device)
+            m0_lines = torch.full((b_size, n_lines0), -1, device=device, dtype=torch.int64)
+            m1_lines = torch.full((b_size, n_lines1), -1, device=device, dtype=torch.int64)
+            mscores0_lines = torch.zeros((b_size, n_lines0), device=device, dtype=torch.float32)
+            mscores1_lines = torch.zeros((b_size, n_lines1), device=device, dtype=torch.float32)
+            raw_line_scores = torch.zeros(b_size, n_lines0, n_lines1, dtype=torch.float, device=device)
         pred["line_log_assignment"] = line_scores
         pred["line_matches0"] = m0_lines
         pred["line_matches1"] = m1_lines
@@ -328,9 +260,7 @@ class GlueStick(BaseModel):
         m1 = torch.where(valid1, m1, m1.new_tensor(-1))
         return m0, m1, mscores0, mscores1
 
-    def _get_line_matches(
-        self, ldesc0, ldesc1, lines_junc_idx0, lines_junc_idx1, final_proj
-    ):
+    def _get_line_matches(self, ldesc0, ldesc1, lines_junc_idx0, lines_junc_idx1, final_proj):
         mldesc0 = final_proj(ldesc0)
         mldesc1 = final_proj(ldesc1)
 
@@ -358,9 +288,7 @@ class GlueStick(BaseModel):
             line_scores[:, :, 0, :, 1] + line_scores[:, :, 1, :, 0],
         )
         line_scores = log_double_softmax(raw_line_scores, self.line_bin_score)
-        m0_lines, m1_lines, mscores0_lines, mscores1_lines = self._get_matches(
-            line_scores
-        )
+        m0_lines, m1_lines, mscores0_lines, mscores1_lines = self._get_matches(line_scores)
         return (
             line_scores,
             m0_lines,
@@ -372,11 +300,7 @@ class GlueStick(BaseModel):
 
     def sub_loss(self, pred, data, losses, bin_score, prefix="", layer=-1):
         line_suffix = "" if layer == -1 else f"{layer}_"
-        layer_weight = (
-            1.0
-            if layer == -1
-            else self.conf.loss.inter_supervision[self.layer2idx[layer]]
-        )
+        layer_weight = 1.0 if layer == -1 else self.conf.loss.inter_supervision[self.layer2idx[layer]]
 
         positive = data["gt_" + prefix + "assignment"].float()
         num_pos = torch.max(positive.sum((1, 2)), positive.new_tensor(1))
@@ -390,10 +314,7 @@ class GlueStick(BaseModel):
         nll_neg0 = -(log_assignment[:, :-1, -1] * neg0).sum(1)
         nll_neg1 = -(log_assignment[:, -1, :-1] * neg1).sum(1)
         nll_neg = (nll_neg0 + nll_neg1) / num_neg
-        nll = (
-            self.conf.loss.nll_balancing * nll_pos
-            + (1 - self.conf.loss.nll_balancing) * nll_neg
-        )
+        nll = self.conf.loss.nll_balancing * nll_pos + (1 - self.conf.loss.nll_balancing) * nll_neg
         losses[prefix + line_suffix + "assignment_nll"] = nll
         if self.conf.loss.nll_weight > 0:
             losses["total"] += nll * self.conf.loss.nll_weight * layer_weight
@@ -402,9 +323,7 @@ class GlueStick(BaseModel):
         if line_suffix == "":
             losses[prefix + "num_matchable"] = num_pos
             losses[prefix + "num_unmatchable"] = num_neg
-            losses[prefix + "sinkhorn_norm"] = (
-                log_assignment.exp()[:, :-1].sum(2).mean(1)
-            )
+            losses[prefix + "sinkhorn_norm"] = log_assignment.exp()[:, :-1].sum(2).mean(1)
             losses[prefix + "bin_score"] = bin_score[None]
 
         return losses
@@ -416,42 +335,23 @@ class GlueStick(BaseModel):
             losses = self.sub_loss(pred, data, losses, self.bin_score, prefix="")
 
         # If there are lines add their loss terms
-        if (
-            "lines0" in data
-            and "lines1" in data
-            and data["lines0"].shape[1] > 0
-            and data["lines1"].shape[1] > 0
-        ):
-            losses = self.sub_loss(
-                pred, data, losses, self.line_bin_score, prefix="line_"
-            )
+        if "lines0" in data and "lines1" in data and data["lines0"].shape[1] > 0 and data["lines1"].shape[1] > 0:
+            losses = self.sub_loss(pred, data, losses, self.line_bin_score, prefix="line_")
 
         if self.conf.inter_supervision:
             for layer in self.conf.inter_supervision:
-                losses = self.sub_loss(
-                    pred, data, losses, self.line_bin_score, prefix="line_", layer=layer
-                )
+                losses = self.sub_loss(pred, data, losses, self.line_bin_score, prefix="line_", layer=layer)
 
         # Compute the metrics
         metrics = {}
         if not self.training:
-            if (
-                "matches0" in pred
-                and pred["matches0"].shape[1] > 0
-                and pred["matches1"].shape[1] > 0
-            ):
+            if "matches0" in pred and pred["matches0"].shape[1] > 0 and pred["matches1"].shape[1] > 0:
                 metrics = {**metrics, **matcher_metrics(pred, data, prefix="")}
-            if (
-                "line_matches0" in pred
-                and data["lines0"].shape[1] > 0
-                and data["lines1"].shape[1] > 0
-            ):
+            if "line_matches0" in pred and data["lines0"].shape[1] > 0 and data["lines1"].shape[1] > 0:
                 metrics = {**metrics, **matcher_metrics(pred, data, prefix="line_")}
             if self.conf.inter_supervision:
                 for layer in self.conf.inter_supervision:
-                    inter_metrics = matcher_metrics(
-                        pred, data, prefix=f"line_{layer}_", prefix_gt="line_"
-                    )
+                    inter_metrics = matcher_metrics(pred, data, prefix=f"line_{layer}_", prefix_gt="line_")
                     metrics = {**metrics, **inter_metrics}
 
         return losses, metrics
@@ -536,10 +436,7 @@ class MultiHeadedAttention(nn.Module):
 
     def forward(self, query, key, value):
         b = query.size(0)
-        query, key, value = [
-            layer(x).view(b, self.dim, self.h, -1)
-            for layer, x in zip(self.proj, (query, key, value))
-        ]
+        query, key, value = [layer(x).view(b, self.dim, self.h, -1) for layer, x in zip(self.proj, (query, key, value))]
         x, prob = attention(query, key, value)
         # self.prob.append(prob.mean(dim=1))
         return self.merge(x.contiguous().view(b, self.dim * self.h, -1))
@@ -596,13 +493,9 @@ class LineLayer(nn.Module):
         # and lines_junc_idx [bs, n_lines * 2]
         # Create one message per line endpoint
         b_size = lines_junc_idx.shape[0]
-        line_desc = torch.gather(
-            ldesc, 2, lines_junc_idx[:, None].repeat(1, self.dim, 1)
-        )
+        line_desc = torch.gather(ldesc, 2, lines_junc_idx[:, None].repeat(1, self.dim, 1))
         line_desc2 = line_desc.reshape(b_size, self.dim, -1, 2).flip([-1])
-        message = torch.cat(
-            [line_desc, line_desc2.flatten(2, 3).clone(), line_enc], dim=1
-        )
+        message = torch.cat([line_desc, line_desc2.flatten(2, 3).clone(), line_enc], dim=1)
         return self.mlp(message)  # [b_size, D, n_lines * 2]
 
     def get_endpoint_attention(self, ldesc, line_enc, lines_junc_idx):
@@ -633,9 +526,7 @@ class LineLayer(nn.Module):
         prob = prob / (denom + ETH_EPS)
         return prob  # [b_size, n_lines * 2]
 
-    def forward(
-        self, ldesc0, ldesc1, line_enc0, line_enc1, lines_junc_idx0, lines_junc_idx1
-    ):
+    def forward(self, ldesc0, ldesc1, line_enc0, line_enc1, lines_junc_idx0, lines_junc_idx1):
         # Gather the endpoint updates
         lupdate0 = self.get_endpoint_update(ldesc0, line_enc0, lines_junc_idx0)
         lupdate1 = self.get_endpoint_update(ldesc1, line_enc1, lines_junc_idx1)
@@ -702,31 +593,16 @@ class AttentionalGNN(nn.Module):
         self.inter_supervision = inter_supervision
         self.num_line_iterations = num_line_iterations
         self.inter_layers = {}
-        self.layers = nn.ModuleList(
-            [GNNLayer(feature_dim, layer_type, skip) for layer_type in layer_types]
-        )
-        self.line_layers = nn.ModuleList(
-            [
-                LineLayer(feature_dim, line_attention)
-                for _ in range(len(layer_types) // 2)
-            ]
-        )
+        self.layers = nn.ModuleList([GNNLayer(feature_dim, layer_type, skip) for layer_type in layer_types])
+        self.line_layers = nn.ModuleList([LineLayer(feature_dim, line_attention) for _ in range(len(layer_types) // 2)])
 
-    def forward(
-        self, desc0, desc1, line_enc0, line_enc1, lines_junc_idx0, lines_junc_idx1
-    ):
+    def forward(self, desc0, desc1, line_enc0, line_enc1, lines_junc_idx0, lines_junc_idx1):
         for i, layer in enumerate(self.layers):
             if self.checkpointed:
-                desc0, desc1 = torch.utils.checkpoint.checkpoint(
-                    layer, desc0, desc1, preserve_rng_state=False
-                )
+                desc0, desc1 = torch.utils.checkpoint.checkpoint(layer, desc0, desc1, preserve_rng_state=False)
             else:
                 desc0, desc1 = layer(desc0, desc1)
-            if (
-                layer.type == "self"
-                and lines_junc_idx0.shape[1] > 0
-                and lines_junc_idx1.shape[1] > 0
-            ):
+            if layer.type == "self" and lines_junc_idx0.shape[1] > 0 and lines_junc_idx1.shape[1] > 0:
                 # Add line self attention layers after every self layer
                 for _ in range(self.num_line_iterations):
                     if self.checkpointed:
@@ -751,11 +627,7 @@ class AttentionalGNN(nn.Module):
                         )
 
             # Optionally store the line descriptor at intermediate layers
-            if (
-                self.inter_supervision is not None
-                and (i // 2) in self.inter_supervision
-                and layer.type == "cross"
-            ):
+            if self.inter_supervision is not None and (i // 2) in self.inter_supervision and layer.type == "cross":
                 self.inter_layers[i // 2] = (desc0.clone(), desc1.clone())
         return desc0, desc1
 

@@ -142,9 +142,7 @@ def run_export(feature_file, scene, args):
 
     callback_fn = None
     # callback_fn=get_kp_depth  # use this to store the depth of each keypoint
-    export_predictions(
-        loader, model, feature_file, as_half=True, keys=keys, callback_fn=callback_fn
-    )
+    export_predictions(loader, model, feature_file, as_half=True, keys=keys, callback_fn=callback_fn)
 
 
 if __name__ == "__main__":

@@ -126,9 +126,7 @@ def visualize(args):
     with fork_rng(seed=dataset.conf.seed):
         images = []
         for _, data in zip(range(args.num_items), loader):
-            images.append(
-                (data[f"view{i}"]["image"][0].permute(1, 2, 0) for i in range(2))
-            )
+            images.append((data[f"view{i}"]["image"][0].permute(1, 2, 0) for i in range(2)))
     plot_image_grid(images, dpi=args.dpi)
     plt.tight_layout()
     plt.show()

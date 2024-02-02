@@ -120,9 +120,7 @@ def save_experiment(
         "eval": results,
     }
     if cp_name is None:
-        cp_name = (
-            f"checkpoint_{epoch}_{iter_i}" + ("_interrupted" if stop else "") + ".tar"
-        )
+        cp_name = f"checkpoint_{epoch}_{iter_i}" + ("_interrupted" if stop else "") + ".tar"
     logger.info(f"Saving checkpoint {cp_name}")
     cp_path = str(output_dir / cp_name)
     torch.save(checkpoint, cp_path)

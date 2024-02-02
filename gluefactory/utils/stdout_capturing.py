@@ -29,19 +29,12 @@ def apply_backspaces_and_linefeeds(text):
         chars, cursor = [], 0
         orig_line_len = len(orig_line)
         for orig_char_idx, orig_char in enumerate(orig_line):
-            if orig_char == "\r" and (
-                orig_char_idx != orig_line_len - 1
-                or orig_line_idx != orig_lines_len - 1
-            ):
+            if orig_char == "\r" and (orig_char_idx != orig_line_len - 1 or orig_line_idx != orig_lines_len - 1):
                 cursor = 0
             elif orig_char == "\b":
                 cursor = max(0, cursor - 1)
             else:
-                if (
-                    orig_char == "\r"
-                    and orig_char_idx == orig_line_len - 1
-                    and orig_line_idx == orig_lines_len - 1
-                ):
+                if orig_char == "\r" and orig_char_idx == orig_line_len - 1 and orig_line_idx == orig_lines_len - 1:
                     cursor = len(chars)
                 if cursor == len(chars):
                     chars.append(orig_char)

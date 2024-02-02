@@ -22,12 +22,8 @@ def matcher_metrics(pred, data, prefix="", prefix_gt=None):
         sorted_p_mask = torch.gather(p_mask, -1, sort_ind)
         sorted_r_mask = torch.gather(r_mask, -1, sort_ind)
         sorted_tp = torch.gather(m == gt_m, -1, sort_ind)
-        p_pts = torch.cumsum(sorted_tp * sorted_p_mask, -1) / (
-            1e-8 + torch.cumsum(sorted_p_mask, -1)
-        )
-        r_pts = torch.cumsum(sorted_tp * sorted_r_mask, -1) / (
-            1e-8 + sorted_r_mask.sum(-1)[:, None]
-        )
+        p_pts = torch.cumsum(sorted_tp * sorted_p_mask, -1) / (1e-8 + torch.cumsum(sorted_p_mask, -1))
+        r_pts = torch.cumsum(sorted_tp * sorted_r_mask, -1) / (1e-8 + sorted_r_mask.sum(-1)[:, None])
         r_pts_diff = r_pts[..., 1:] - r_pts[..., :-1]
         return torch.sum(r_pts_diff * p_pts[:, None, -1], dim=-1)
 

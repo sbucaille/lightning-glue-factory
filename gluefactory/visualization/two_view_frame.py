@@ -48,9 +48,7 @@ class TwoViewFrame:
                 keys = keys.intersection(pred.keys())
         keys = keys.union(data.keys())
 
-        self.options = [
-            k for k, v in self.plot_dict.items() if set(v.required_keys).issubset(keys)
-        ]
+        self.options = [k for k, v in self.plot_dict.items() if set(v.required_keys).issubset(keys)]
         self.handle = None
         self.radios = self.fig.canvas.manager.toolmanager.add_tool(
             "switch plot",
@@ -90,16 +88,9 @@ class TwoViewFrame:
         fig, axes = viz2d.plot_image_grid(imgs, return_fig=True, titles=None, figs=5)
         [viz2d.add_text(0, n, axes=axes[i]) for i, n in enumerate(self.names)]
 
-        if (
-            self.plot == "color+depth"
-            and "depth" in view0.keys()
-            and view0["depth"] is not None
-        ):
+        if self.plot == "color+depth" and "depth" in view0.keys() and view0["depth"] is not None:
             hmaps = [[view0["depth"][0], view1["depth"][0]] for _ in self.names]
-            [
-                viz2d.plot_heatmaps(hmaps[i], axes=axes[i], cmap="Spectral")
-                for i, _ in enumerate(hmaps)
-            ]
+            [viz2d.plot_heatmaps(hmaps[i], axes=axes[i], cmap="Spectral") for i, _ in enumerate(hmaps)]
 
         fig.canvas.mpl_connect("pick_event", self.click_artist)
         if self.summaries is not None:

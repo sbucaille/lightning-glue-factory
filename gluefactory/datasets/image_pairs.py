@@ -18,11 +18,7 @@ def names_to_pair(name0, name1, separator="/"):
 
 
 def parse_homography(homography_elems) -> Camera:
-    return (
-        np.array([float(x) for x in homography_elems[:9]])
-        .reshape(3, 3)
-        .astype(np.float32)
-    )
+    return np.array([float(x) for x in homography_elems[:9]]).reshape(3, 3).astype(np.float32)
 
 
 def parse_camera(calib_elems) -> Camera:
@@ -48,9 +44,7 @@ class ImagePairs(BaseDataset, torch.utils.data.Dataset):
     }
 
     def _init(self, conf):
-        pair_f = (
-            Path(conf.pairs) if Path(conf.pairs).exists() else DATA_PATH / conf.pairs
-        )
+        pair_f = Path(conf.pairs) if Path(conf.pairs).exists() else DATA_PATH / conf.pairs
         with open(str(pair_f), "r") as f:
             self.items = [line.rstrip() for line in f]
         self.preprocessor = ImagePreprocessor(conf.preprocessing)
@@ -75,23 +69,13 @@ class ImagePairs(BaseDataset, torch.utils.data.Dataset):
             "view1": data1,
         }
         if self.conf.extra_data == "relative_pose":
-            data["view0"]["camera"] = parse_camera(pair_data[2:11]).scale(
-                data0["scales"]
-            )
-            data["view1"]["camera"] = parse_camera(pair_data[11:20]).scale(
-                data1["scales"]
-            )
+            data["view0"]["camera"] = parse_camera(pair_data[2:11]).scale(data0["scales"])
+            data["view1"]["camera"] = parse_camera(pair_data[11:20]).scale(data1["scales"])
             data["T_0to1"] = parse_relative_pose(pair_data[20:32])
         elif self.conf.extra_data == "homography":
-            data["H_0to1"] = (
-                data1["transform"]
-                @ parse_homography(pair_data[2:11])
-                @ np.linalg.inv(data0["transform"])
-            )
+            data["H_0to1"] = data1["transform"] @ parse_homography(pair_data[2:11]) @ np.linalg.inv(data0["transform"])
         else:
-            assert (
-                self.conf.extra_data is None
-            ), f"Unknown extra data format {self.conf.extra_data}"
+            assert self.conf.extra_data is None, f"Unknown extra data format {self.conf.extra_data}"
 
         data["name"] = names_to_pair(name0, name1)
         return data

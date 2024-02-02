@@ -57,10 +57,10 @@ class BaseModel(nn.Module, metaclass=MetaModel):
     are_weights_initialized = False
 
     def __init__(
-            self,
-            trainable: bool,
-            freeze_batch_normalization: bool,
-            timeit: bool,
+        self,
+        trainable: bool,
+        freeze_batch_normalization: bool,
+        timeit: bool,
     ):
         super().__init__()
         self.trainable = trainable
@@ -137,9 +137,7 @@ class BaseModel(nn.Module, metaclass=MetaModel):
             else:
                 # else, we check if self is initialized or the children has no params
                 n_params = len(list(w.parameters()))
-                is_initialized = is_initialized and (
-                        n_params == 0 or self.are_weights_initialized
-                )
+                is_initialized = is_initialized and (n_params == 0 or self.are_weights_initialized)
         return is_initialized
 
     def set_initialized(self, to: bool = True):

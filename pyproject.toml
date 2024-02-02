@@ -3,14 +3,14 @@ name = "gluefactory"
 description = "Training and evaluation of local feature extraction and matching"
 version = "0.0"
 authors = [
-    {name = "Philipp Lindenberger"},
-    {name = "Paul-Edouard Sarlin"},
-    {name = "Rémi Pautrat"},
-    {name = "Iago Suárez"},
+    { name = "Philipp Lindenberger" },
+    { name = "Paul-Edouard Sarlin" },
+    { name = "Rémi Pautrat" },
+    { name = "Iago Suárez" },
 ]
 readme = "README.md"
 requires-python = ">=3.6"
-license = {file = "LICENSE"}
+license = { file = "LICENSE" }
 classifiers = [
     "Programming Language :: Python :: 3",
     "License :: OSI Approved :: Apache Software License",
@@ -33,7 +33,7 @@ dependencies = [
     "joblib",
     "lightglue @ git+https://github.com/cvg/LightGlue.git",
 ]
-urls = {Repository = "https://github.com/cvg/glue-factory"}
+urls = { Repository = "https://github.com/cvg/glue-factory" }
 
 [project.optional-dependencies]
 extra = [
@@ -54,3 +54,77 @@ gluefactory = ["datasets/megadepth_scene_lists/*.txt", "configs/*.yaml"]
 [tool.isort]
 profile = "black"
 extend_skip = ["gluefactory_nonfree/"]
+
+[tool.poetry]
+name = "lightning-glue-factory"
+version = "0.1.0"
+description = ""
+authors = ["Steven Bucaille"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.10"
+torch = ">=1.7"
+torchvision = ">=0.8"
+numpy = "^1.26.3"
+opencv-python = "^4.9.0.80"
+tqdm = "^4.66.1"
+scipy = "^1.12.0"
+matplotlib = "^3.8.2"
+h5py = "^3.10.0"
+omegaconf = "^2.3.0"
+tensorboard = "^2.15.1"
+albumentations = "^1.3.1"
+kornia = "^0.7.1"
+seaborn = "^0.13.2"
+joblib = "^1.3.2"
+lightglue = { git = "https://github.com/cvg/LightGlue.git" }
+ruff = "^0.2.0"
+black = "^24.1.1"
+lightning = "^2.1.4"
+hydra-core = "^1.3.2"
+ruff-lsp = "^0.0.51"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.ruff]
+# match black
+line-length = 120
+target-version = "py311"
+select = [
+    "ALL", # include all the rules, including new ones
+]
+ignore = [
+    #### modules
+    "ANN", # flake8-annotations
+    "COM", # flake8-commas
+    "C90", # mccabe complexity
+    "DJ", # django
+    "EXE", # flake8-executable
+    "T10", # debugger
+    "TID", # flake8-tidy-imports
+
+    #### specific rules
+    "D100", # ignore missing docs
+    "D101",
+    "D102",
+    "D103",
+    "D104",
+    "D105",
+    "D106",
+    "D107",
+    "D200",
+    "D205",
+    "D212",
+    "D400",
+    "D401",
+    "D415",
+    "E402", # false positives for local imports
+    "E501", # line too long
+    "TRY003", # external messages in exceptions are too verbose
+    "TD002",
+    "TD003",
+    "FIX002", # too verbose descriptions of todos
+]

@@ -32,18 +32,14 @@ def rotate_intrinsics(K, image_shape, rot):
     fx, fy, cx, cy = K[0, 0], K[1, 1], K[0, 2], K[1, 2]
     rot = rot % 4
     if rot == 1:
-        return np.array(
-            [[fy, 0.0, cy], [0.0, fx, w - cx], [0.0, 0.0, 1.0]], dtype=K.dtype
-        )
+        return np.array([[fy, 0.0, cy], [0.0, fx, w - cx], [0.0, 0.0, 1.0]], dtype=K.dtype)
     elif rot == 2:
         return np.array(
             [[fx, 0.0, w - cx], [0.0, fy, h - cy], [0.0, 0.0, 1.0]],
             dtype=K.dtype,
         )
     else:  # if rot == 3:
-        return np.array(
-            [[fy, 0.0, h - cy], [0.0, fx, cx], [0.0, 0.0, 1.0]], dtype=K.dtype
-        )
+        return np.array([[fy, 0.0, h - cy], [0.0, fx, cx], [0.0, 0.0, 1.0]], dtype=K.dtype)
 
 
 def rotate_pose_inplane(i_T_w, rot):

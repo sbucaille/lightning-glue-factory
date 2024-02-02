@@ -16,9 +16,7 @@ class DinoV2(BaseModel):
         img = data["image"]
         if self.conf.allow_resize:
             img = F.upsample(img, [int(x // 14 * 14) for x in img.shape[-2:]])
-        desc, cls_token = self.net.get_intermediate_layers(
-            img, n=1, return_class_token=True, reshape=True
-        )[0]
+        desc, cls_token = self.net.get_intermediate_layers(img, n=1, return_class_token=True, reshape=True)[0]
 
         return {
             "features": desc,

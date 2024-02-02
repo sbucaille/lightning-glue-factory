@@ -18,13 +18,9 @@ def pad_local_features(pred: dict, seq_l: int):
         mode="random_c",
     )
     if "keypoint_scores" in pred.keys():
-        pred["keypoint_scores"] = pad_to_length(
-            pred["keypoint_scores"], seq_l, -1, mode="zeros"
-        )
+        pred["keypoint_scores"] = pad_to_length(pred["keypoint_scores"], seq_l, -1, mode="zeros")
     if "descriptors" in pred.keys():
-        pred["descriptors"] = pad_to_length(
-            pred["descriptors"], seq_l, -2, mode="random"
-        )
+        pred["descriptors"] = pad_to_length(pred["descriptors"], seq_l, -2, mode="random")
     if "scales" in pred.keys():
         pred["scales"] = pad_to_length(pred["scales"], seq_l, -1, mode="zeros")
     if "oris" in pred.keys():
@@ -77,9 +73,7 @@ class CacheLoader(BaseModel):
         preds = []
         device = self.conf.device
         if not device:
-            devices = set(
-                [v.device for v in data.values() if isinstance(v, torch.Tensor)]
-            )
+            devices = set([v.device for v in data.values() if isinstance(v, torch.Tensor)])
             if len(devices) == 0:
                 device = "cpu"
             else:
@@ -93,9 +87,7 @@ class CacheLoader(BaseModel):
                 fpath = DATA_PATH / fpath
             hfile = h5py.File(str(fpath), "r")
             grp = hfile[name]
-            pkeys = (
-                self.conf.data_keys if self.conf.data_keys is not None else grp.keys()
-            )
+            pkeys = self.conf.data_keys if self.conf.data_keys is not None else grp.keys()
             pred = recursive_load(grp, pkeys)
             if self.numeric_dtype is not None:
                 pred = {
@@ -109,11 +101,7 @@ class CacheLoader(BaseModel):
                 for pattern in self.conf.scale:
                     if k.startswith(pattern):
                         view_idx = k.replace(pattern, "")
-                        scales = (
-                            data["scales"]
-                            if len(view_idx) == 0
-                            else data[f"view{view_idx}"]["scales"]
-                        )
+                        scales = data["scales"] if len(view_idx) == 0 else data[f"view{view_idx}"]["scales"]
                         pred[k] = pred[k] * scales[i]
             # use this function to fix number of keypoints etc.
             if self.padding_fn is not None:

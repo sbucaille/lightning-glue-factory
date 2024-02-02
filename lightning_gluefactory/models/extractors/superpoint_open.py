@@ -1,19 +1,19 @@
-"""PyTorch implementation of the SuperPoint model,
-   derived from the TensorFlow re-implementation (2018).
-   Authors: Rémi Pautrat, Paul-Edouard Sarlin
-   https://github.com/rpautrat/SuperPoint
-   The implementation of this model and its trained weights are made
-   available under the MIT license.
 """
+PyTorch implementation of the SuperPoint model,
+derived from the TensorFlow re-implementation (2018).
+Authors: Rémi Pautrat, Paul-Edouard Sarlin
+https://github.com/rpautrat/SuperPoint
+The implementation of this model and its trained weights are made
+available under the MIT license.
+"""
+
 from collections import OrderedDict
-from types import SimpleNamespace
-from typing import List
 
 import torch
-import torch.nn as nn
+from torch import nn
 
-from lightning_gluefactory.models.base_model import BaseModel
 from gluefactory.models.utils.misc import pad_and_stack
+from lightning_gluefactory.models.base_model import BaseModel
 
 
 def sample_descriptors(keypoints, descriptors, s: int = 8):
@@ -24,9 +24,7 @@ def sample_descriptors(keypoints, descriptors, s: int = 8):
     descriptors = torch.nn.functional.grid_sample(
         descriptors, keypoints.view(b, 1, -1, 2), mode="bilinear", align_corners=False
     )
-    descriptors = torch.nn.functional.normalize(
-        descriptors.reshape(b, c, -1), p=2, dim=1
-    )
+    descriptors = torch.nn.functional.normalize(descriptors.reshape(b, c, -1), p=2, dim=1)
     return descriptors
 
 
@@ -34,9 +32,7 @@ def batched_nms(scores, nms_radius: int):
     assert nms_radius >= 0
 
     def max_pool(x):
-        return torch.nn.functional.max_pool2d(
-            x, kernel_size=nms_radius * 2 + 1, stride=1, padding=nms_radius
-        )
+        return torch.nn.functional.max_pool2d(x, kernel_size=nms_radius * 2 + 1, stride=1, padding=nms_radius)
 
     zeros = torch.zeros_like(scores)
     max_mask = scores == max_pool(scores)
@@ -58,9 +54,7 @@ def select_top_k_keypoints(keypoints, scores, k):
 class VGGBlock(nn.Sequential):
     def __init__(self, c_in, c_out, kernel_size, relu=True):
         padding = (kernel_size - 1) // 2
-        conv = nn.Conv2d(
-            c_in, c_out, kernel_size=kernel_size, stride=1, padding=padding
-        )
+        conv = nn.Conv2d(c_in, c_out, kernel_size=kernel_size, stride=1, padding=padding)
         activation = nn.ReLU(inplace=True) if relu else nn.Identity()
         bn = nn.BatchNorm2d(c_out, eps=0.001)
         super().__init__(
@@ -75,19 +69,18 @@ class VGGBlock(nn.Sequential):
 
 
 class SuperPoint(BaseModel):
-
     def __init__(
-            self,
-            descriptor_dim: int,
-            nms_radius: int,
-            max_num_keypoints: int,
-            force_num_keypoints: bool,
-            detection_threshold: float,
-            remove_borders: int,
-            channels: List[int],
-            dense_outputs: bool,
-            checkpoint_url: str,
-            **kwargs
+        self,
+        descriptor_dim: int,
+        nms_radius: int,
+        max_num_keypoints: int,
+        force_num_keypoints: bool,
+        detection_threshold: float,
+        remove_borders: int,
+        channels: list[int],
+        dense_outputs: bool,
+        checkpoint_url: str,
+        **kwargs,
     ):
         self.descriptor_dim = descriptor_dim
         self.nms_radius = nms_radius
@@ -115,7 +108,7 @@ class SuperPoint(BaseModel):
         c = self.channels[-1]
         self.detector = nn.Sequential(
             VGGBlock(channels[-1], c, 3),
-            VGGBlock(c, self.stride ** 2 + 1, 1, relu=False),
+            VGGBlock(c, self.stride**2 + 1, 1, relu=False),
         )
         self.descriptor = nn.Sequential(
             VGGBlock(channels[-1], c, 3),
@@ -131,18 +124,14 @@ class SuperPoint(BaseModel):
             scale = image.new_tensor([0.299, 0.587, 0.114]).view(1, 3, 1, 1)
             image = (image * scale).sum(1, keepdim=True)
         features = self.backbone(image)
-        descriptors_dense = torch.nn.functional.normalize(
-            self.descriptor(features), p=2, dim=1
-        )
+        descriptors_dense = torch.nn.functional.normalize(self.descriptor(features), p=2, dim=1)
 
         # Decode the detection scores
         scores = self.detector(features)
         scores = torch.nn.functional.softmax(scores, 1)[:, :-1]
         b, _, h, w = scores.shape
         scores = scores.permute(0, 2, 3, 1).reshape(b, h, w, self.stride, self.stride)
-        scores = scores.permute(0, 1, 3, 2, 4).reshape(
-            b, h * self.stride, w * self.stride
-        )
+        scores = scores.permute(0, 1, 3, 2, 4).reshape(b, h * self.stride, w * self.stride)
         scores = batched_nms(scores, self.nms_radius)
 
         # Discard keypoints near the image borders
@@ -191,9 +180,7 @@ class SuperPoint(BaseModel):
                     data.get("image_size", torch.tensor(image.shape[-2:])).min().item(),
                 ),
             )
-            scores = pad_and_stack(
-                scores, self.max_num_keypoints, -1, mode="zeros"
-            )
+            scores = pad_and_stack(scores, self.max_num_keypoints, -1, mode="zeros")
         else:
             keypoints = torch.stack(keypoints, 0)
             scores = torch.stack(scores, 0)
@@ -204,7 +191,7 @@ class SuperPoint(BaseModel):
         else:
             desc = [
                 sample_descriptors(k[None], d[None], self.stride)[0]
-                for k, d in zip(keypoints, descriptors_dense)
+                for k, d in zip(keypoints, descriptors_dense, strict=False)
             ]
 
         pred = {

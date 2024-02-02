@@ -23,9 +23,7 @@ def sample_descriptors(keypoints, descriptors, s: int = 8):
     descriptors = torch.nn.functional.grid_sample(
         descriptors, keypoints.view(b, 1, -1, 2), mode="bilinear", align_corners=False
     )
-    descriptors = torch.nn.functional.normalize(
-        descriptors.reshape(b, c, -1), p=2, dim=1
-    )
+    descriptors = torch.nn.functional.normalize(descriptors.reshape(b, c, -1), p=2, dim=1)
     return descriptors
 
 
@@ -33,9 +31,7 @@ def batched_nms(scores, nms_radius: int):
     assert nms_radius >= 0
 
     def max_pool(x):
-        return torch.nn.functional.max_pool2d(
-            x, kernel_size=nms_radius * 2 + 1, stride=1, padding=nms_radius
-        )
+        return torch.nn.functional.max_pool2d(x, kernel_size=nms_radius * 2 + 1, stride=1, padding=nms_radius)
 
     zeros = torch.zeros_like(scores)
     max_mask = scores == max_pool(scores)
@@ -57,9 +53,7 @@ def select_top_k_keypoints(keypoints, scores, k):
 class VGGBlock(nn.Sequential):
     def __init__(self, c_in, c_out, kernel_size, relu=True):
         padding = (kernel_size - 1) // 2
-        conv = nn.Conv2d(
-            c_in, c_out, kernel_size=kernel_size, stride=1, padding=padding
-        )
+        conv = nn.Conv2d(c_in, c_out, kernel_size=kernel_size, stride=1, padding=padding)
         activation = nn.ReLU(inplace=True) if relu else nn.Identity()
         bn = nn.BatchNorm2d(c_out, eps=0.001)
         super().__init__(
@@ -120,18 +114,14 @@ class SuperPoint(BaseModel):
             scale = image.new_tensor([0.299, 0.587, 0.114]).view(1, 3, 1, 1)
             image = (image * scale).sum(1, keepdim=True)
         features = self.backbone(image)
-        descriptors_dense = torch.nn.functional.normalize(
-            self.descriptor(features), p=2, dim=1
-        )
+        descriptors_dense = torch.nn.functional.normalize(self.descriptor(features), p=2, dim=1)
 
         # Decode the detection scores
         scores = self.detector(features)
         scores = torch.nn.functional.softmax(scores, 1)[:, :-1]
         b, _, h, w = scores.shape
         scores = scores.permute(0, 2, 3, 1).reshape(b, h, w, self.stride, self.stride)
-        scores = scores.permute(0, 1, 3, 2, 4).reshape(
-            b, h * self.stride, w * self.stride
-        )
+        scores = scores.permute(0, 1, 3, 2, 4).reshape(b, h * self.stride, w * self.stride)
         scores = batched_nms(scores, self.conf.nms_radius)
 
         # Discard keypoints near the image borders
@@ -180,9 +170,7 @@ class SuperPoint(BaseModel):
                     data.get("image_size", torch.tensor(image.shape[-2:])).min().item(),
                 ),
             )
-            scores = pad_and_stack(
-                scores, self.conf.max_num_keypoints, -1, mode="zeros"
-            )
+            scores = pad_and_stack(scores, self.conf.max_num_keypoints, -1, mode="zeros")
         else:
             keypoints = torch.stack(keypoints, 0)
             scores = torch.stack(scores, 0)
@@ -191,10 +179,7 @@ class SuperPoint(BaseModel):
             # Batch sampling of the descriptors
             desc = sample_descriptors(keypoints, descriptors_dense, self.stride)
         else:
-            desc = [
-                sample_descriptors(k[None], d[None], self.stride)[0]
-                for k, d in zip(keypoints, descriptors_dense)
-            ]
+            desc = [sample_descriptors(k[None], d[None], self.stride)[0] for k, d in zip(keypoints, descriptors_dense)]
 
         pred = {
             "keypoints": keypoints + 0.5,

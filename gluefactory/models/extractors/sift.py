@@ -43,9 +43,7 @@ def nms_keypoints(kpts: np.ndarray, responses: np.ndarray, radius: float) -> np.
     return mask
 
 
-def detect_kpts_opencv(
-    features: cv2.Feature2D, image: np.ndarray, describe: bool = True
-) -> np.ndarray:
+def detect_kpts_opencv(features: cv2.Feature2D, image: np.ndarray, describe: bool = True) -> np.ndarray:
     """
     Detect keypoints using OpenCV Detector.
     Optionally, perform NMS and filter top-response keypoints.
@@ -113,9 +111,7 @@ class SIFT(BaseModel):
 
         if self.sift is None and detector.startswith("pycolmap"):
             options = OmegaConf.to_container(self.conf.pycolmap_options)
-            device = (
-                "auto" if detector == "pycolmap" else detector.replace("pycolmap_", "")
-            )
+            device = "auto" if detector == "pycolmap" else detector.replace("pycolmap_", "")
             if self.conf.rootsift == "rootsift":
                 options["normalization"] = pycolmap.Normalization.L1_ROOT
             else:
@@ -131,9 +127,7 @@ class SIFT(BaseModel):
             keypoints, scores, descriptors = self.sift.extract(image_np)
         elif detector == "cv2":
             # TODO: Check if opencv keypoints are already in corner convention
-            keypoints, scores, descriptors = detect_kpts_opencv(
-                self.sift, (image_np * 255.0).astype(np.uint8)
-            )
+            keypoints, scores, descriptors = detect_kpts_opencv(self.sift, (image_np * 255.0).astype(np.uint8))
 
         if self.conf.nms_radius is not None:
             mask = nms_keypoints(keypoints[:, :2], scores, self.conf.nms_radius)

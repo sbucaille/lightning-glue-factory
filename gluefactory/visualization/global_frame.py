@@ -31,9 +31,7 @@ class GlobalFrame:
 
     scatters = {}
 
-    def __init__(
-        self, conf, results, loader, predictions, title=None, child_frame=None
-    ):
+    def __init__(self, conf, results, loader, predictions, title=None, child_frame=None):
         self.child_frame = child_frame
         if self.child_frame is not None:
             # We do NOT merge inside the child frame to keep settings across figs
@@ -120,15 +118,11 @@ class GlobalFrame:
             x = x if x_cat else x - refx
             y = y if y_cat else y - refy
 
-            (s,) = self.axes.plot(
-                x, y, "o", markersize=3, label=name, picker=True, pickradius=5
-            )
+            (s,) = self.axes.plot(x, y, "o", markersize=3, label=name, picker=True, pickradius=5)
             self.scatters[name] = s
 
             if x_cat and not y_cat:
-                xunique, ind, xinv, xbin = np.unique(
-                    x, return_inverse=True, return_counts=True, return_index=True
-                )
+                xunique, ind, xinv, xbin = np.unique(x, return_inverse=True, return_counts=True, return_index=True)
                 ybin = np.bincount(xinv, weights=y)
                 sort_ax = np.argsort(ind)
                 self.axes.step(
@@ -205,13 +199,8 @@ class GlobalFrame:
         preds = {}
 
         for name, pfile in self.predictions.items():
-            preds[name] = CacheLoader({"path": str(pfile), "add_data_path": False})(
-                data
-            )
-        summaries_i = {
-            name: {k: v[ind] for k, v in res.items() if k != "names"}
-            for name, res in self.results.items()
-        }
+            preds[name] = CacheLoader({"path": str(pfile), "add_data_path": False})(data)
+        summaries_i = {name: {k: v[ind] for k, v in res.items() if k != "names"} for name, res in self.results.items()}
         frame = self.child_frame(
             self.conf.child,
             deepcopy(data),
@@ -223,9 +212,7 @@ class GlobalFrame:
 
         frame.fig.canvas.mpl_connect(
             "key_press_event",
-            functools.partial(
-                self.on_childframe_key_event, frame=frame, ind=ind, event=event
-            ),
+            functools.partial(self.on_childframe_key_event, frame=frame, ind=ind, event=event),
         )
         self.childs.append(frame)
         # if plt.rcParams['backend'] == 'webagg':

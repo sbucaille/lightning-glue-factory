@@ -12,9 +12,7 @@ def sample_fmap(pts, fmap):
     # @TODO: This might still be a source of noise --> bilinear interpolation dangerous
     interp_lin = grid_sample(fmap, pts, align_corners=False, mode="bilinear")
     interp_nn = grid_sample(fmap, pts, align_corners=False, mode="nearest")
-    return torch.where(torch.isnan(interp_lin), interp_nn, interp_lin)[:, :, 0].permute(
-        0, 2, 1
-    )
+    return torch.where(torch.isnan(interp_lin), interp_nn, interp_lin)[:, :, 0].permute(0, 2, 1)
 
 
 def sample_depth(pts, depth_):
@@ -83,6 +81,4 @@ def dense_warp_consistency(
     validi = di > 0
     kpir, validir = project(kpi, di, depthj, camerai, cameraj, T_itoj, validi, **kwargs)
 
-    return kpir.unflatten(-2, depthi.shape[-2:]), validir.unflatten(
-        -1, (depthj.shape[-2:])
-    )
+    return kpir.unflatten(-2, depthi.shape[-2:]), validir.unflatten(-1, (depthj.shape[-2:]))
