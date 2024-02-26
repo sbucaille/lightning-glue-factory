@@ -1,5 +1,5 @@
 experiment_name: ???
-data_path: data/
+data_path: ???
 training_path: training/
 eval_path: results/
 mixed_precision : false

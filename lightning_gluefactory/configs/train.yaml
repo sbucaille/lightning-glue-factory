@@ -21,7 +21,8 @@ train:
   lr_scaling:
    -
     - 100
-    - "dampingnet.const"
+    - 
+      - "dampingnet.const"
 
   eval_every_iter: 1000  # interval for evaluation on the validation set
   save_every_iter: 5000  # interval for saving the current checkpoint
@@ -47,4 +48,5 @@ callbacks:
   model_checkpointing:
     monitor: "val/loss/total"  # key to use to select the best checkpoint
     mode: "min"  # min/max
+    every_n_train_steps: ${train.eval_every_iter}
 overfit: false

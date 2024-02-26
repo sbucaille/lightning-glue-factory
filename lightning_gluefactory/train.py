@@ -71,6 +71,7 @@ def training(config: DictConfig):
 
 @hydra.main(config_path="configs", config_name="train")
 def main(config: OmegaConf):
+    OmegaConf.resolve(config)
     print(OmegaConf.to_yaml(config))
 
     training_path = Path(config.training_path)
