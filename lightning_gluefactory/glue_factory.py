@@ -1,3 +1,5 @@
+from pathlib import Path
+
 import hydra
 import lightning as L
 import numpy as np
@@ -30,6 +32,11 @@ class GlueFactory(L.LightningModule):
 
     def forward(self, x):
         return self.model(x)
+
+    def import_weights_from_checkpoint(self, checkpoint_path: Path):
+        checkpoint = torch.load(checkpoint_path)
+        model_weights = {k.replace("model.", ""): v for k, v in checkpoint["state_dict"].items() if k.startswith("model.")}
+        self.model.load_state_dict(model_weights)
 
     def on_train_epoch_start(self) -> None:
         L.seed_everything(self.config.train.seed + self.current_epoch)

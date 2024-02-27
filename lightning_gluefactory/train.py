@@ -1,7 +1,9 @@
+import logging
 from pathlib import Path
 
 import hydra
 import lightning as L
+import torch
 from omegaconf import DictConfig, OmegaConf
 from pytorch_lightning.loggers import Logger
 
@@ -51,6 +53,10 @@ def training(config: DictConfig):
 
     glue_factory = GlueFactory(config)
 
+    if config.checkpoint is not None:
+        glue_factory.import_weights_from_checkpoint(config.checkpoint)
+        logging.info(f"Checkpoint loaded : {config.checkpoint}")
+        
     logger: Logger = hydra.utils.instantiate(config.logger) if getattr(config, "logger", None) is not None else None
     logger.log_hyperparams(config)
     callbacks = [hydra.utils.instantiate(c) for c in config.callbacks.values()]
