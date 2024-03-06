@@ -4,7 +4,7 @@ training_path: training/
 eval_path: results/
 mixed_precision : false
 
-log_dir: outputs/${experiment_name}/${now:%Y-%m-%d}/${now:%H-%M-%S}
+log_dir: ../outputs/${experiment_name}/${now:%Y-%m-%d}/${now:%H-%M-%S}
 
 hydra:
   run:

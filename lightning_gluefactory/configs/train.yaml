@@ -3,6 +3,7 @@ defaults:
   - callbacks:
       - model_checkpointing
       - learning_rate_monitor
+      - speed_monitor
 
 train:
   seed: "???"
@@ -49,4 +50,6 @@ callbacks:
     monitor: "val/loss/total"  # key to use to select the best checkpoint
     mode: "min"  # min/max
     every_n_train_steps: ${train.eval_every_iter}
+  speed_monitor:
+    log_every_iter: ${train.log_every_iter}
 overfit: false

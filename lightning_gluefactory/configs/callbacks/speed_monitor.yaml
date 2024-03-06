@@ -1,0 +1,3 @@
+speed_monitor:
+  _target_: lightning_gluefactory.utils.speed_monitor.SpeedMonitorCallback
+  log_every_iter: ???

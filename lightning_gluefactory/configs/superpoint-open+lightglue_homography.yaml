@@ -34,7 +34,7 @@ model:
   matcher:
     filter_threshold: 0.1
     flash: false
-    checkpointed: true
+    checkpointed: false
 data:
   train_size: 150000
   val_size: 2000
